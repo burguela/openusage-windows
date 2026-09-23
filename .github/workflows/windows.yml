@@ -2,11 +2,17 @@ name: Windows
 
 # Builds Quota Tray, this fork's Windows app: the shared Swift engine (`openusage-cli.exe`, shipped as
 # `quotatray-engine.exe`) plus the WPF notification-area app (`QuotaTray.exe`), packaged into one zip
-# artifact and an installer. See docs/windows.md.
+# artifact and an installer. Run by hand on main with "Publish release" checked, it also publishes them
+# as a GitHub release. See docs/windows.md.
 on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: Publish a GitHub release with this build (main only; the version comes from windows/QuotaTray/QuotaTray.csproj)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -21,10 +27,21 @@ jobs:
   windows:
     name: Build Windows App
     runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+
+      - name: Read Quota Tray version
+        id: version
+        shell: pwsh
+        run: |
+          $version = ([xml](Get-Content windows/QuotaTray/QuotaTray.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          if (-not $version) { throw 'QuotaTray.csproj has no Version' }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "Quota Tray $version"
 
       - name: Set up Swift
         uses: compnerd/gha-setup-swift@main
@@ -82,8 +99,7 @@ jobs:
       - name: Build installer
         shell: pwsh
         run: |
-          $version = (& dist/QuotaTray/quotatray-engine.exe dashboard --cached | ConvertFrom-Json).appVersion
-          if (-not $version) { throw 'the engine did not report an app version' }
+          $version = '${{ steps.version.outputs.version }}'
           if (-not (Get-Command iscc.exe -ErrorAction SilentlyContinue)) {
             choco install innosetup --no-progress -y | Out-Null
             $env:PATH += ";${env:ProgramFiles(x86)}\Inno Setup 6"
@@ -122,6 +138,44 @@ jobs:
           name: QuotaTray-windows-setup
           path: dist/installer/*.exe
           if-no-files-found: error
+
+  release:
+    # Publishes only when run by hand on main with "Publish release" checked, and only after the app,
+    # the installer check, and every test job passed.
+    name: Publish Release
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_release && github.ref == 'refs/heads/main'
+    needs: [windows, engine-tests-windows, engine-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: QuotaTray-windows-setup
+          path: dist/installer
+      - uses: actions/download-artifact@v4
+        with:
+          name: QuotaTray-windows-x64
+          path: dist/QuotaTray
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.windows.outputs.version }}
+        run: |
+          tag="quotatray-v$VERSION"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::$tag is already released; raise the Version in windows/QuotaTray/QuotaTray.csproj first"
+            exit 1
+          fi
+          (cd dist && zip -qr QuotaTray-windows-x64.zip QuotaTray)
+          sed "s/{VERSION}/$VERSION/g" windows/installer/release-notes.md > dist/notes.md
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Quota Tray $VERSION" --notes-file dist/notes.md --latest \
+            dist/installer/QuotaTray-Setup-x64.exe dist/QuotaTray-windows-x64.zip \
+            windows/installer/install.ps1 windows/installer/uninstall.ps1
 
   engine-tests-windows:
     name: Engine Tests (Windows)

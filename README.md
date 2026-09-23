@@ -54,21 +54,20 @@ install the official build from [robinebers/openusage](https://github.com/robine
 
 ## Install on Windows
 
-There are no signed releases of Quota Tray yet.
+Paste into PowerShell:
 
-1. Open the latest successful run of the **Windows** workflow in this repository's
-   [Actions tab](https://github.com/burguela/openusage-windows/actions/workflows/windows.yml).
-2. Download the `QuotaTray-windows-setup` artifact, unzip it, and run `QuotaTray-Setup-x64.exe`.
-   It installs for your account only (no administrator rights), adds a Start menu entry, and starts
-   Quota Tray when you sign in (you can untick that). Prefer no installer? `QuotaTray-windows-x64` is the
-   same app as a portable folder.
-3. Your pinned readings appear in the taskbar next to the clock, provider icon and numbers, like the Mac
-   app's menu-bar strip.
-   Uninstall from **Settings → Apps**.
+```powershell
+irm https://github.com/burguela/openusage-windows/releases/latest/download/install.ps1 | iex
+```
 
-Once the fork publishes a GitHub release, PowerShell can do both steps:
-`irm https://github.com/burguela/openusage-windows/releases/latest/download/install.ps1 | iex` installs
-or updates, and the same URL ending in `uninstall.ps1` removes it.
+It installs the latest [release](https://github.com/burguela/openusage-windows/releases/latest) for your
+account only (no administrator rights), adds a Start menu entry, and starts Quota Tray when you sign in.
+You can also download `QuotaTray-Setup-x64.exe` from the release, or the portable
+`QuotaTray-windows-x64.zip`. Run the command or the installer again to update. Your pinned readings
+appear in the taskbar next to the clock, provider icon and numbers, like the Mac app's menu-bar strip.
+
+Uninstall from **Settings → Apps**, or with
+`irm https://github.com/burguela/openusage-windows/releases/latest/download/uninstall.ps1 | iex`.
 
 <p align="center">
   <img src="docs/screenshots/windows-tray-dark.png" alt="Quota Tray's readings in the Windows taskbar" width="420">
@@ -153,10 +152,11 @@ prints. See the [architecture overview](docs/architecture.md#windows).
 
 ## Releases
 
-This fork doesn't publish releases. The release pipeline in
-[.github/workflows/release.yml](.github/workflows/release.yml) (signed and notarized DMGs, Sparkle updates,
-Homebrew) belongs to the official macOS app and needs the original project's signing secrets; it is kept
-only so upstream merges stay clean.
+This fork publishes only Quota Tray releases (tags `quotatray-vX.Y.Z`), from the **Windows** workflow
+run by hand on `main` with "Publish release" checked; see [docs/windows.md](docs/windows.md#releasing).
+The release pipeline in [.github/workflows/release.yml](.github/workflows/release.yml) (signed and
+notarized DMGs, Sparkle updates, Homebrew) belongs to the official macOS app and needs the original
+project's signing secrets; it is kept only so upstream merges stay clean.
 
 ## Contributing and security
 

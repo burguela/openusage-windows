@@ -61,34 +61,38 @@ side has no room for the strip, so there the tray icon shows the meters.
 
 ## Installing
 
-There are no signed releases yet. Each successful run of the fork's
-[Windows workflow](https://github.com/burguela/openusage-windows/actions/workflows/windows.yml) offers two
-downloads:
+Paste into PowerShell to install or update the latest
+[release](https://github.com/burguela/openusage-windows/releases/latest):
 
-- **`QuotaTray-windows-setup`** — the installer (`QuotaTray-Setup-x64.exe`). It installs for your
-  Windows account only, so it needs no administrator rights, into `%LOCALAPPDATA%\Programs\QuotaTray`.
-  It adds Quota Tray to the Start menu, starts it when you sign in (checked by default), and can add a
-  desktop shortcut. Run a newer installer to update; it closes a running copy first. Uninstall from
-  **Settings → Apps**; your settings and caches stay, so a reinstall picks up where you left off.
-- **`QuotaTray-windows-x64`** — the same app as a portable folder. Unzip it anywhere and run
+```powershell
+irm https://github.com/burguela/openusage-windows/releases/latest/download/install.ps1 | iex
+```
+
+It downloads the installer and runs it silently. Each release also has the files themselves:
+
+- **`QuotaTray-Setup-x64.exe`** — the installer. It installs for your Windows account only, so it needs
+  no administrator rights, into `%LOCALAPPDATA%\Programs\QuotaTray`. It adds Quota Tray to the Start
+  menu, starts it when you sign in (checked by default), and can add a desktop shortcut. Run a newer
+  installer to update; it closes a running copy first.
+- **`QuotaTray-windows-x64.zip`** — the same app as a portable folder. Unzip it anywhere and run
   `QuotaTray.exe`; to update, quit Quota Tray and replace the folder. Its first launch also turns on
   Launch at Login; switch it off in Settings if you'd rather start it yourself.
 
-`windows/installer/install.ps1` and `uninstall.ps1` run the same installer from PowerShell. They download
-it from the fork's latest GitHub release, so the paste-in commands below work once a release with those
-files is published:
+To uninstall, use **Settings → Apps**, or paste:
 
 ```powershell
-# Install or update
-irm https://github.com/burguela/openusage-windows/releases/latest/download/install.ps1 | iex
-# Uninstall (settings and logs stay; set $env:QUOTATRAY_PURGE = 1 first to remove them too)
+# Settings and logs stay; set $env:QUOTATRAY_PURGE = 1 first to remove them too.
 irm https://github.com/burguela/openusage-windows/releases/latest/download/uninstall.ps1 | iex
 ```
 
-With a downloaded installer, `$env:QUOTATRAY_SETUP = 'C:\path\QuotaTray-Setup-x64.exe'` makes
-`install.ps1` use it instead of downloading.
+A reinstall picks up your settings and caches where you left off. With a downloaded installer,
+`$env:QUOTATRAY_SETUP = 'C:\path\QuotaTray-Setup-x64.exe'` makes `install.ps1` use it instead of
+downloading. Every successful run of the
+[Windows workflow](https://github.com/burguela/openusage-windows/actions/workflows/windows.yml) also offers
+the same builds as the `QuotaTray-windows-setup` and `QuotaTray-windows-x64` artifacts.
 
-Neither is code-signed yet, so SmartScreen may warn the first time; choose **More info → Run anyway**.
+Quota Tray isn't code-signed yet, so SmartScreen may warn the first time; choose **More info → Run
+anyway**. It doesn't update itself; run the install command again for a new version.
 
 ## First run and refreshing
 
@@ -164,6 +168,15 @@ dist/QuotaTray/QuotaTray.exe
 # Optional: the installer (Inno Setup 6). The version is the one the engine reports.
 iscc /DAppVersion=0.7.0 /DAppDir=$PWD\dist\QuotaTray /DOutputDir=$PWD\dist\installer windows\installer\QuotaTray.iss
 ```
+
+### Releasing
+
+Quota Tray has its own version, `Version` in `windows/QuotaTray/QuotaTray.csproj`; the panel footer and the
+installer show it. Only the owner picks a new number. To publish it, run the **Windows** workflow by hand
+on `main` (Actions → Windows → Run workflow) with **Publish release** checked. After the app, the
+installer check, and every test job pass, it creates the GitHub release `quotatray-v<version>` as Latest
+with the installer, the portable zip, `install.ps1`, `uninstall.ps1`, and the notes in
+`windows/installer/release-notes.md`. It refuses a version that is already released.
 
 While developing the tray app, set `QUOTATRAY_ENGINE` to a built `openusage-cli.exe` to use an engine
 from another folder. `QuotaTray.exe --render-preview <dashboard.json> <folder>` renders the panel (light and

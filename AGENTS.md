@@ -16,7 +16,9 @@ AGENTS.md is the source of truth for agent instructions in this repository. CLAU
 > only credit OpenUsage as the original project.
 > Keep the credits to the original project and the "unofficial fork" notices in `README.md` and `docs/`, and
 > keep Windows code isolated (`windows/`, `#if os(Windows)`) so upstream merges stay small. The release rules
-> below describe the original project's macOS pipeline; this fork does not cut releases.
+> below describe the original project's macOS pipeline, which this fork doesn't run. The fork releases only
+> Quota Tray, from the Windows workflow (tags `quotatray-vX.Y.Z`, see `docs/windows.md`); never change its
+> `Version` in `windows/QuotaTray/QuotaTray.csproj` without the owner's explicit approval.
 
 ## Releases
 

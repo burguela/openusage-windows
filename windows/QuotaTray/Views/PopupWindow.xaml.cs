@@ -247,6 +247,13 @@ public partial class PopupWindow : Window
     /// The pinned footer: "Quota Tray x.y.z" over the next-update countdown (click it to refresh now),
     /// and on the dashboard the Options menu capsule.
     /// </summary>
+    /// <summary>Quota Tray's own version (the csproj's Version), without the build's commit suffix.</summary>
+    private static readonly string AppVersion =
+        (System.Reflection.Assembly.GetExecutingAssembly()
+            .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+            .FirstOrDefault() as System.Reflection.AssemblyInformationalVersionAttribute)?.InformationalVersion
+            .Split('+')[0] ?? "";
+
     private UIElement BuildFooter(Theme theme)
     {
         var grid = new Grid();
@@ -254,8 +261,7 @@ public partial class PopupWindow : Window
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
         var identity = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-        var version = _dashboard?.AppVersion is { Length: > 0 } value ? $"Quota Tray {value}" : "Quota Tray";
-        identity.Children.Add(Text(version, theme.TextSecondary, 11));
+        identity.Children.Add(Text($"Quota Tray {AppVersion}", theme.TextSecondary, 11));
         _footerStatus = Text("", theme.TextSecondary, 11);
         _footerStatus.Cursor = Cursors.Hand;
         _footerStatus.MouseLeftButtonUp += (_, e) =>
