@@ -6,18 +6,24 @@ shared engine.
 
 ## Using it
 
-- **Click the tray icon** to open the panel above the taskbar. It shows each enabled provider with its
-  meters, the plan, and any error. Click anywhere else, or press Esc, to close it.
-- **Show More** under a provider reveals its On Demand rows (the ones behind the caret on the Mac).
-- **Refresh** in the footer (or F5 / Ctrl+R while the panel is open) refreshes every provider now,
-  skipping the cache.
-- **Settings** (top right of the panel, or right-click the tray icon) turns providers on and off, picks
-  whether meters show usage **Left** or **Used**, and toggles **Launch at Login**.
+The panel follows the Mac popover's layout and colors, in Windows' light or dark app mode.
+
+- **Click the tray icon** to open the panel above the taskbar. Click anywhere else, or press Esc, to
+  close it.
+- **Cost** at the top is the Total Spend ring: what Claude, Codex, Cursor, and other spend-tracking
+  providers cost Today, Yesterday, or over the last 30 days. Turn it off in Settings.
+- Each provider has its own card with its meters, the plan, and a warning triangle when the last refresh
+  failed (hover it for the reason). **The caret** under a card's rows reveals its On Demand rows and
+  quick links. **Click a meter's reading** ("58% left") to switch every meter between Left and Used.
+- **The footer** shows the version and the next automatic update; click "Next update in …" (or press
+  F5 / Ctrl+R) to refresh every provider now.
+- **Options** (bottom right) opens Settings, the log folder, and Quit. Settings has Show Total Spend,
+  Launch at Login, Show Usage As (Left or Used), a switch per provider, and Open Folder for logs.
 - **Right-click the tray icon** for Open OpenUsage, Refresh Now, Settings, Launch at Login, Open Log
   Folder, and Quit OpenUsage.
 
 The tray icon draws two small meters for the first two pinned rows that have data (Claude's Session
-and Weekly by default), in orange or red when a limit is close. Hovering it lists every pinned reading.
+and Weekly by default), in yellow or red when a limit is close. Hovering it lists every pinned reading.
 Windows may place a new tray icon in the overflow (the `^` arrow); drag it onto the taskbar to keep it
 visible.
 
@@ -54,6 +60,7 @@ credentials on Windows, so Credential Manager is only a fallback.
 | Logs | `%LOCALAPPDATA%\OpenUsage\Logs\` (`OpenUsage.log` from the engine, `OpenUsage.Windows.log` from the tray app) |
 | Spend-history parse cache, pricing cache | `%LOCALAPPDATA%\OpenUsage\` |
 | Launch at Login | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, value `OpenUsage` |
+| Show Total Spend, the selected spend period | `HKCU\Software\OpenUsage` |
 
 Deleting that preferences file resets OpenUsage to a first run.
 
@@ -61,7 +68,7 @@ Deleting that preferences file resets OpenUsage to a first run.
 
 These Mac features are not part of the Windows app: Customize (reordering, hiding, and pinning metrics;
 Windows uses the default layout), notifications, the global shortcut, the local HTTP API, iCloud Sync,
-share cards, and automatic updates. Install a new version by replacing the app folder.
+share cards, the Cost/MTok and Tokens views of Total Spend, and automatic updates. Install a new version by replacing the app folder.
 
 ## How it's built
 
@@ -89,5 +96,8 @@ dist/OpenUsage/OpenUsage.exe
 ```
 
 While developing the tray app, set `OPENUSAGE_ENGINE` to a built `openusage-cli.exe` to use an engine
-from another folder. `windows/scripts/generate_assets.py` regenerates the tray app's icon and provider
+from another folder. `OpenUsage.exe --render-preview <dashboard.json> <folder>` renders the panel (light,
+dark, dashboard, Settings) to PNGs from a saved dashboard document; CI does this with
+`windows/OpenUsage.Windows/Preview/sample-dashboard.json` and uploads the `OpenUsage-windows-screenshots`
+artifact. `windows/scripts/generate_assets.py` regenerates the tray app's icon and provider
 marks from `Sources/OpenUsage/Resources/ProviderIcons`.

@@ -100,8 +100,8 @@ public sealed class TrayIconRenderer : IDisposable
 
     private static Color FillColor(string? severity, bool lightTaskbar) => severity switch
     {
-        "warning" => Color.FromArgb(0xF5, 0xA5, 0x24),
-        "critical" => Color.FromArgb(0xF0, 0x44, 0x3A),
+        "warning" => Color.FromArgb(0xFF, 0xCC, 0x00),
+        "critical" => Color.FromArgb(0xFF, 0x3B, 0x30),
         _ => lightTaskbar ? Color.FromArgb(0x1B, 0x1C, 0x1F) : Color.White,
     };
 

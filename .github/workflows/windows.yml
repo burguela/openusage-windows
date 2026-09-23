@@ -62,6 +62,27 @@ jobs:
           if ($p.ExitCode -ne 0) { throw "preview render failed ($($p.ExitCode))" }
           Get-ChildItem dist/screenshots | Format-Table Name, Length
 
+      - name: Print screenshots (temporary, for review)
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Drawing
+          foreach ($name in 'dashboard-light', 'dashboard-dark', 'settings-light') {
+            $img = [System.Drawing.Image]::FromFile((Resolve-Path "dist/screenshots/$name.png"))
+            $w = [int]($img.Width * 0.6); $h = [int]($img.Height * 0.6)
+            $bmp = New-Object System.Drawing.Bitmap $w, $h
+            $g = [System.Drawing.Graphics]::FromImage($bmp)
+            $g.InterpolationMode = 'HighQualityBicubic'; $g.DrawImage($img, 0, 0, $w, $h)
+            $codec = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object MimeType -eq 'image/jpeg'
+            $params = New-Object System.Drawing.Imaging.EncoderParameters 1
+            $params.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter ([System.Drawing.Imaging.Encoder]::Quality), 72L
+            $ms = New-Object System.IO.MemoryStream
+            $bmp.Save($ms, $codec, $params)
+            $b64 = [Convert]::ToBase64String($ms.ToArray())
+            Write-Host "SHOT-BEGIN $name"
+            for ($i = 0; $i -lt $b64.Length; $i += 4000) { Write-Host ("SHOT " + $b64.Substring($i, [Math]::Min(4000, $b64.Length - $i))) }
+            Write-Host "SHOT-END $name"
+          }
+
       - uses: actions/upload-artifact@v4
         with:
           name: OpenUsage-windows-screenshots
