@@ -77,7 +77,17 @@ struct SystemProcessRunner: ProcessRunning {
         exited.enter()
         process.terminationHandler = { _ in exited.leave() }
 
-        try process.run()
+        do {
+            try process.run()
+        } catch {
+            exited.leave()
+            // Name the resolved path: "file doesn't exist" alone doesn't say which file.
+            throw ProcessRunnerError.launchFailed(
+                executable: executable,
+                path: process.executableURL?.path ?? executable,
+                reason: error.localizedDescription
+            )
+        }
 
         if exited.wait(timeout: .now() + timeout) == .timedOut {
             terminateProcessTree(rootPID: process.processIdentifier)
@@ -162,11 +172,14 @@ struct SystemProcessRunner: ProcessRunning {
 enum ProcessRunnerError: Error, LocalizedError, Equatable {
     case timedOut(executable: String, timeout: TimeInterval)
     case executableNotFound(String)
+    case launchFailed(executable: String, path: String, reason: String)
 
     var errorDescription: String? {
         switch self {
         case .executableNotFound(let executable):
             return "\(executable) was not found next to OpenUsage or on PATH."
+        case .launchFailed(let executable, let path, let reason):
+            return "\(executable) could not start (\(path)): \(reason)"
         case .timedOut(let executable, let timeout):
             return "\(executable) timed out after \(Int(timeout))s."
         }
