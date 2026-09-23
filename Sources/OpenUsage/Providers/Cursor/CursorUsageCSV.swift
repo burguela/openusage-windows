@@ -33,24 +33,23 @@ enum CursorUsageCSV {
     }
 
     // Date parsing runs once per row of a potentially large export; the three fixed-format parsers are
-    // stateless after configuration, so they're built once instead of per call. DateFormatter and
-    // ISO8601DateFormatter are thread-safe for parsing; `nonisolated(unsafe)` shares the immutable
-    // instances without per-call allocation.
-    private nonisolated(unsafe) static let isoFractional: ISO8601DateFormatter = {
+    // stateless after configuration, so they're built once instead of per call and shared through
+    // `SharedFormatter`.
+    private static let isoFractional: SharedFormatter<ISO8601DateFormatter> = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return f
+        return SharedFormatter(f)
     }()
-    private nonisolated(unsafe) static let iso: ISO8601DateFormatter = {
+    private static let iso: SharedFormatter<ISO8601DateFormatter> = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime]
-        return f
+        return SharedFormatter(f)
     }()
-    private static let plainDateTime: DateFormatter = {
+    private static let plainDateTime: SharedFormatter<DateFormatter> = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        return f
+        return SharedFormatter(f)
     }()
 
     /// Pure boundary parser: maps Cursor's exported CSV text into priced rows, rejects malformed rows,
@@ -121,9 +120,9 @@ enum CursorUsageCSV {
     }
 
     private static func parseDate(_ raw: String) -> Date? {
-        if let d = isoFractional.date(from: raw) { return d }
-        if let d = iso.date(from: raw) { return d }
-        return plainDateTime.date(from: raw)
+        if let d = isoFractional.with({ $0.date(from: raw) }) { return d }
+        if let d = iso.with({ $0.date(from: raw) }) { return d }
+        return plainDateTime.with { $0.date(from: raw) }
     }
 
     private static func parseIntValue(_ raw: String?) -> Int? {

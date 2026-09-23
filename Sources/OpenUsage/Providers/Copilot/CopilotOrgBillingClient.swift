@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// Calls GitHub's public REST billing endpoints to find the organization that provides an org-managed
 /// Copilot seat and read its month-to-date usage. Used only when `/copilot_internal/user` reports a

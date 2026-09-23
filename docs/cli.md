@@ -29,5 +29,25 @@ In OpenUsage, open **Settings → Command Line** and click **Install…**. After
 administrator prompt, `openusage` is available globally in new terminal sessions. The installed symlink
 points to the signed helper inside OpenUsage, so in-place app updates also update the command.
 
+## Desktop commands
+
+The [Windows app](windows.md) (Quota Tray) drives the same binary (shipped as `quotatray-engine.exe`) with a few extra
+commands. Each prints the display-ready `openusage.desktop.v1` dashboard: every provider with its
+on/off state, plan, notice, links, and rows whose text is already formatted (headlines, reset
+countdowns, pace notes), so a front end only lays it out.
+
+```sh
+openusage dashboard            # refresh stale providers, print the dashboard
+openusage dashboard --cached   # cached values only, never touches the network
+openusage dashboard --force    # refresh every enabled provider now
+openusage enable cursor        # turn a provider (or a whole family) on, print the dashboard
+openusage disable cursor       # turn it off
+openusage meter-style used     # meters show usage used (`left` shows what's remaining)
+```
+
+The first desktop command on a new install turns on the providers whose credentials are on the machine,
+like the Mac app's first launch. The dashboard uses the default layout (which metrics show, which are On
+Demand, which are pinned).
+
 Exit codes are `0` for success, `2` for invalid arguments or an unknown provider, and `4` when a
 refresh or local read fails.

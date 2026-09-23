@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(os)
 import os
+#endif
 
 /// Resolves the log file URL and owns a serial, lock-guarded `FileHandle` appender with single-archive
 /// rotation. `@unchecked Sendable` because all mutable state is guarded by an internal `NSLock`, so it
@@ -17,7 +19,16 @@ final class LogFile: @unchecked Sendable {
     /// `~/Library/Logs/OpenUsage/OpenUsage.log` via `FileManager`, never hardcoded from `$HOME`; the
     /// `Logs/OpenUsage` subfolder is a literal (not bundle-id-keyed), so the dev and release builds
     /// agree on the same file — acceptable since they are separate builds.
-    static let shared = LogFile(directory: defaultDirectory(), fileName: "OpenUsage.log")
+    static let shared = LogFile(directory: defaultDirectory(), fileName: defaultFileName)
+
+    /// On Windows the engine's log sits beside the tray app's own `QuotaTray.log`, so it's named for its role.
+    static var defaultFileName: String {
+        #if os(Windows)
+        "Engine.log"
+        #else
+        "OpenUsage.log"
+        #endif
+    }
 
     /// The advertised log path (logged at startup, copied/revealed from Settings). Derived from the
     /// shared sink so the path shown to the user always equals where logs are actually written.
@@ -57,9 +68,14 @@ final class LogFile: @unchecked Sendable {
         // `.first` with a fallback rather than `[0]`: the lookup effectively always resolves on stock
         // macOS, but a force-index would crash the app at launch (this runs during `bootstrap()`) if it
         // ever returned empty in an unusual container. A non-ideal-but-valid directory keeps the app alive.
+        #if os(macOS)
         let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
         return library.appendingPathComponent("Logs/OpenUsage", isDirectory: true)
+        #else
+        // Windows: `%LOCALAPPDATA%\QuotaTray\Logs`, next to the rest of the app's local state.
+        return Platform.appDataDirectory.appendingPathComponent("\(Platform.appFolderName)/Logs", isDirectory: true)
+        #endif
     }
 
     /// Create the directory and file, seed the in-memory size from disk, and perform the launch-time

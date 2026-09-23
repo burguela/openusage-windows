@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(os)
 import os
+#endif
 
 /// An immutable pricing snapshot: the supplement plus the two public catalogs, with the resolution
 /// order ported from ccusage. `ModelPricingStore` builds one; scanners and mappers use it

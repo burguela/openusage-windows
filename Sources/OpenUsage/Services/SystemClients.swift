@@ -1,6 +1,7 @@
-import Darwin
 import Foundation
+#if canImport(Security)
 import Security
+#endif
 
 protocol EnvironmentReading: Sendable {
     func value(for name: String) -> String?
@@ -58,11 +59,6 @@ extension TextFileAccessing {
 }
 
 struct LocalTextFileAccessor: TextFileAccessing {
-    /// Credential and token files must never be readable by another local account. Write through a
-    /// private temporary file in the destination directory, flush it, then rename it over the target:
-    /// the final replacement is atomic and has mode 0600 from the moment it becomes addressable.
-    private static let privateFileMode = mode_t(S_IRUSR | S_IWUSR)
-
     func exists(_ path: String) -> Bool {
         FileManager.default.fileExists(atPath: expandHome(path))
     }
@@ -79,77 +75,17 @@ struct LocalTextFileAccessor: TextFileAccessing {
         }
     }
 
+    /// Credential and token files must never be readable by another local account. The platform
+    /// writer publishes the file atomically with owner-only access (see
+    /// `Platform.writePrivateFileAtomically`).
     func writeText(_ path: String, _ text: String) throws {
-        let expanded = expandHome(path)
-        let parent = URL(fileURLWithPath: expanded).deletingLastPathComponent()
-        try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
-
-        let destination = URL(fileURLWithPath: expanded)
-        let temporary = parent.appendingPathComponent(
-            ".\(destination.lastPathComponent).\(UUID().uuidString).tmp"
-        )
-        let descriptor = temporary.path.withCString {
-            Darwin.open($0, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, Self.privateFileMode)
-        }
-        guard descriptor >= 0 else { throw Self.currentPOSIXError() }
-
-        var descriptorIsOpen = true
-        var temporaryExists = true
-        defer {
-            if descriptorIsOpen { _ = Darwin.close(descriptor) }
-            if temporaryExists {
-                temporary.path.withCString { _ = Darwin.unlink($0) }
-            }
-        }
-
-        // A process umask may only remove permissions at creation. Reassert the exact private mode on
-        // the still-unpublished inode before writing or renaming it into place.
-        guard Darwin.fchmod(descriptor, Self.privateFileMode) == 0 else {
-            throw Self.currentPOSIXError()
-        }
-        try Self.writeAll(Data(text.utf8), to: descriptor)
-        guard Darwin.fsync(descriptor) == 0 else { throw Self.currentPOSIXError() }
-        let closeResult = Darwin.close(descriptor)
-        descriptorIsOpen = false
-        guard closeResult == 0 else { throw Self.currentPOSIXError() }
-
-        let renameResult = temporary.path.withCString { source in
-            expanded.withCString { destination in
-                Darwin.rename(source, destination)
-            }
-        }
-        guard renameResult == 0 else { throw Self.currentPOSIXError() }
-        temporaryExists = false
+        try Platform.writePrivateFileAtomically(Data(text.utf8), to: expandHome(path))
     }
 
     func remove(_ path: String) throws {
         let expanded = expandHome(path)
         guard FileManager.default.fileExists(atPath: expanded) else { return }
         try FileManager.default.removeItem(atPath: expanded)
-    }
-
-    private static func writeAll(_ data: Data, to descriptor: Int32) throws {
-        try data.withUnsafeBytes { buffer in
-            guard let baseAddress = buffer.baseAddress else { return }
-            var offset = 0
-            while offset < buffer.count {
-                let result = Darwin.write(
-                    descriptor,
-                    baseAddress.advanced(by: offset),
-                    buffer.count - offset
-                )
-                if result < 0 {
-                    if errno == EINTR { continue }
-                    throw currentPOSIXError()
-                }
-                guard result > 0 else { throw POSIXError(.EIO) }
-                offset += result
-            }
-        }
-    }
-
-    private static func currentPOSIXError() -> POSIXError {
-        POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
     }
 }
 
@@ -190,6 +126,15 @@ struct SQLiteCLIAccessor: SQLiteAccessing {
         }
     }
 
+    /// macOS ships the `sqlite3` shell in `/usr/bin`. Windows doesn't, so the Windows build bundles
+    /// `sqlite3.exe` next to the engine; `SystemProcessRunner` resolves the bare name there (then
+    /// on `PATH`). Linux distributions put it on `PATH`.
+    #if os(macOS)
+    static let sqliteExecutable = "/usr/bin/sqlite3"
+    #else
+    static let sqliteExecutable = "sqlite3"
+    #endif
+
     private enum OpenMode {
         case readWrite, readOnly, queryOnly
     }
@@ -207,7 +152,7 @@ struct SQLiteCLIAccessor: SQLiteAccessing {
             sql
         ]
         return try processRunner.run(
-            executable: "/usr/bin/sqlite3",
+            executable: Self.sqliteExecutable,
             arguments: arguments,
             environment: [:],
             timeout: 5
@@ -275,6 +220,7 @@ extension KeychainAccessing {
     }
 }
 
+#if os(macOS)
 struct SecurityKeychainAccessor: KeychainAccessing {
     let processRunner: ProcessRunning
 
@@ -363,6 +309,8 @@ struct SecurityKeychainAccessor: KeychainAccessing {
         ?? NSUserName()
     }
 }
+
+#endif
 
 enum KeychainError: Error, LocalizedError {
     case writeFailed(String)

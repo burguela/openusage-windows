@@ -328,7 +328,8 @@ private struct NoProcessRunner: ProcessRunning {
 /// tests exercise the LS probe without real subprocesses.
 private struct FakeLSProcessRunner: ProcessRunning {
     func run(executable: String, arguments: [String], environment: [String: String], timeout: TimeInterval) throws -> ProcessResult {
-        if executable.hasSuffix("/ps") {
+        // The process list: `ps` on macOS/Linux, PowerShell over `Win32_Process` on Windows.
+        if executable.hasSuffix("/ps") || arguments.contains(where: { $0.contains("Win32_Process") }) {
             let ps = "4276 /Applications/Antigravity.app/Contents/Resources/bin/language_server --standalone --override_ide_name antigravity --csrf_token tok --app_data_dir antigravity\n"
             return ProcessResult(exitCode: 0, stdout: ps, stderr: "")
         }

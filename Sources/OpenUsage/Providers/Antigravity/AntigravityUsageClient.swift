@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// Outcome of a Cloud Code call, split so the orchestrator can tell a genuine auth failure (refresh)
 /// apart from a transient outage (try the next base URL / strategy, don't refresh).

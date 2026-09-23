@@ -29,7 +29,7 @@ enum CursorAuthError: Error, LocalizedError, Equatable {
 }
 
 struct CursorAuthStore: Sendable {
-    static let stateDBPath = "~/Library/Application Support/Cursor/User/globalStorage/state.vscdb"
+    static let stateDBPath = "~/\(Platform.desktopAppDataRelativePath("Cursor"))/User/globalStorage/state.vscdb"
     static let accessTokenKey = "cursorAuth/accessToken"
     static let refreshTokenKey = "cursorAuth/refreshToken"
     static let membershipTypeKey = "cursorAuth/stripeMembershipType"

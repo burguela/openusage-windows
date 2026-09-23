@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 struct CodexRefreshResponse: Sendable, Equatable {
     var accessToken: String

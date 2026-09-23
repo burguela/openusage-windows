@@ -1,5 +1,10 @@
 # OpenUsage Documentation
 
+> This is the documentation of [openusage-windows](https://github.com/burguela/openusage-windows), an
+> unofficial fork of [OpenUsage](https://github.com/robinebers/openusage) by Robin Ebers that adds
+> Quota Tray, a Windows app. Everything except the [Windows](windows.md) page comes from the original project and
+> describes the macOS app, unless a page says otherwise.
+
 What the app does and how it behaves. These pages describe **behavior, not visuals**, and they are updated together with any change to that behavior — if the app and a page here disagree, that's a bug.
 
 ## The app
@@ -12,6 +17,7 @@ What the app does and how it behaves. These pages describe **behavior, not visua
 - [Model pricing](pricing.md) — how spend tiles price tokens, and where the rates come from
 - [Updates](updates.md) — automatic updates, manual checks, and the beta channel
 - [Privacy & usage data](privacy.md) — daily activity, crash reports, and optional usage analytics
+- [Windows](windows.md) — Quota Tray, this fork's Windows tray app: using it, where credentials and files live, what's Mac-only
 
 ## Integrations
 

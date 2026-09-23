@@ -22,6 +22,11 @@ struct AppBundleLocator: Sendable {
             )
         }
 
+        #if os(Windows)
+        // Quota Tray, the unofficial Windows fork, keeps its settings apart from any OpenUsage install.
+        return AppBundleLocator(bundleIdentifier: "io.github.burguela.quotatray", version: nil)
+        #else
         return AppBundleLocator(bundleIdentifier: "com.robinebers.openusage", version: nil)
+        #endif
     }
 }

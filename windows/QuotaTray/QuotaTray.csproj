@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Quota Tray: a Windows notification-area (tray) app from an unofficial fork of OpenUsage
+    (https://github.com/robinebers/openusage). All provider logic lives in the shared Swift engine
+    (`quotatray-engine.exe`, built from this repository's `OpenUsageCLI` target); this app runs it and
+    renders the display-ready dashboard it prints. See docs/windows.md.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- NotifyIcon (the tray icon) and its context menu come from Windows Forms. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- Lets the project build (not run) on macOS/Linux too, e.g. for a quick compile check. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- WPF and Windows Forms share type names (Application, MessageBox); keep usings explicit. -->
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>QuotaTray</AssemblyName>
+    <RootNamespace>QuotaTray</RootNamespace>
+    <ApplicationIcon>Assets\QuotaTray.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Quota Tray's own version: the footer, the installer, and the release tag (quotatray-vX.Y.Z) use it.
+         Only the owner decides a new number. -->
+    <Version>0.1.0</Version>
+    <Product>Quota Tray</Product>
+    <Company>Quota Tray</Company>
+    <Description>Quota Tray, an unofficial Windows fork of OpenUsage</Description>
+    <Copyright>MIT License. Copyright (c) 2026 Robin Ebers and contributors</Copyright>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!--
+      WFAC010 asks Windows Forms apps to set DPI awareness in code instead of the manifest. This is a
+      WPF app (Windows Forms only supplies the tray icon), and WPF reads per-monitor awareness from
+      the manifest, so the manifest is the right place.
+    -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\QuotaTray.ico" LogicalName="QuotaTray.ico" />
+    <EmbeddedResource Include="Assets\provider-marks.json" LogicalName="provider-marks.json" />
+  </ItemGroup>
+
+</Project>

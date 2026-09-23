@@ -19,8 +19,15 @@ final class LogFileTests: XCTestCase {
     }
 
     func testResolvedPathEndsWithExpectedSuffix() {
+        #if os(macOS)
+        let expectedSuffix = "Logs/OpenUsage/OpenUsage.log"
+        #elseif os(Windows)
+        let expectedSuffix = "QuotaTray/Logs/Engine.log"
+        #else
+        let expectedSuffix = "OpenUsage/Logs/OpenUsage.log"
+        #endif
         XCTAssertTrue(
-            LogFile.url.path.hasSuffix("Logs/OpenUsage/OpenUsage.log"),
+            LogFile.url.path.hasSuffix(expectedSuffix),
             "unexpected log path: \(LogFile.url.path)"
         )
     }

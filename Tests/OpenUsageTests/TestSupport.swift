@@ -36,7 +36,7 @@ enum ClaudeLogFixture {
     /// A temp *user home* fixture for Cowork tests. `claudeFiles` land under
     /// `<home>/.claude/projects/`; each `coworkSessions` entry (session dir relative to
     /// `local-agent-mode-sessions`, e.g. `group/sub/local_x` → files) lands under that session's
-    /// `.claude/projects/` inside `<home>/Library/Application Support/Claude/local-agent-mode-sessions`.
+    /// `.claude/projects/` inside the Claude desktop app's `local-agent-mode-sessions` folder.
     static func makeUserHome(
         claudeFiles: [String: String] = [:],
         coworkSessions: [String: [String: String]] = [:]
@@ -48,7 +48,7 @@ enum ClaudeLogFixture {
             try write(files: claudeFiles, toProjectsOf: home.appendingPathComponent(".claude"))
         }
         let sessionsBase = home
-            .appendingPathComponent("Library/Application Support/Claude/local-agent-mode-sessions")
+            .appendingPathComponent("\(ClaudeDesktopAuthStore.userDataRelativePath)/local-agent-mode-sessions")
         for (sessionDir, files) in coworkSessions {
             try write(
                 files: files,

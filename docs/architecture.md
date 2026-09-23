@@ -101,6 +101,20 @@ The release build (`script/release.sh`) ships a universal binary (arm64 + x86_64
 natively on both Apple Silicon and Intel Macs. The dev build (`script/build_and_run.sh`) stays host-arch
 only — a universal dev build just doubles compile time on the maintainer's own machine for no benefit.
 
+### Windows
+
+The provider engine also builds on Windows (and Linux, which CI uses to keep it portable). `Package.swift`
+leaves the Mac-only UI files and packages out of non-Mac builds, so off the Mac the package produces only
+the `openusage` CLI. The few OS calls the engine makes go through `Support/Platform.swift` (file locks,
+private atomic writes, helper lookup, the app-data folder); the Keychain maps to Windows Credential
+Manager (`Services/WindowsCredentialStore.swift`); and crypto comes from `swift-crypto` where CryptoKit
+isn't available.
+
+The Windows front end is Quota Tray, a separate .NET tray app in `windows/QuotaTray/` (this fork's
+Windows app, named apart from OpenUsage per the [trademark policy](../TRADEMARK.md)). It runs the CLI's desktop commands
+(`Services/DesktopHost.swift`) and renders the `openusage.desktop.v1` document they print, so formatting,
+pacing, and provider rules stay in Swift. See [Windows](windows.md).
+
 ## Local HTTP API
 
 A small loopback server exposes the current usage as JSON on `127.0.0.1:6736` for other local tools. See

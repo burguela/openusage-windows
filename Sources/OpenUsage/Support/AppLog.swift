@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(os)
 import os
+#endif
 
 /// Subsystem tags that prefix every log line, keeping lines grep-friendly (`[refresh]`, `[cache]`,
 /// `[plugin:claude]`, …). The raw value is the bracketed text and the `os.Logger` category.
@@ -91,7 +93,11 @@ enum AppLog {
         let level = LogLevelSetting.current
         // Abbreviate `$HOME` to `~` so the path survives `redactLogMessage` (which masks `/Users/...`)
         // and the startup line actually self-documents where the log lives.
+        #if canImport(Darwin)
         let displayPath = (LogFile.url.path as NSString).abbreviatingWithTildeInPath
+        #else
+        let displayPath = LogFile.url.path
+        #endif
         info(LogTag.config.rawValue,
              "OpenUsage v\(AppInfo.version) starting (level=\(level.rawValue), log=\(displayPath))")
     }

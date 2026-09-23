@@ -9,6 +9,16 @@ This file documents the engineering conventions for the project. Read it before 
 AGENTS.md is the source of truth for agent instructions in this repository. CLAUDE.md files may only point to the nearest AGENTS.md file with `@AGENTS.md`; do not add guidance, duplicate instructions, or project rules to CLAUDE.md.
 
 > **Repository note:** This is the native Swift edition of OpenUsage. Active development happens on the `main` branch. (NOT the legacy Tauri version which now sits in the `tauri-legacy` branch)
+>
+> **Fork note:** this repository (`burguela/openusage-windows`) is an unofficial fork of
+> [robinebers/openusage](https://github.com/robinebers/openusage) that adds a Windows port shipped as **Quota Tray** (see `docs/windows.md`).
+> Per `TRADEMARK.md`, the Windows app never uses the OpenUsage name or logo as its own name or icon; it may
+> only credit OpenUsage as the original project.
+> Keep the credits to the original project and the "unofficial fork" notices in `README.md` and `docs/`, and
+> keep Windows code isolated (`windows/`, `#if os(Windows)`) so upstream merges stay small. The release rules
+> below describe the original project's macOS pipeline, which this fork doesn't run. The fork releases only
+> Quota Tray, from the Windows workflow (tags `quotatray-vX.Y.Z`, see `docs/windows.md`); never change its
+> `Version` in `windows/QuotaTray/QuotaTray.csproj` without the owner's explicit approval.
 
 ## Releases
 

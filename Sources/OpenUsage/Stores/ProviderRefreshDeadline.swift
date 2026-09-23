@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(os)
 import os
+#endif
 
 /// Runs one provider's `refresh()` under a hard deadline (#1081).
 ///

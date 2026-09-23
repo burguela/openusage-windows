@@ -78,7 +78,10 @@ struct DailyUsageAccumulator {
         let modelUsage = ModelUsageSeries(daily: modelsByDay.keys.sorted(by: >).map { day in
             DailyModelUsageEntry(
                 date: day,
-                models: modelsByDay[day, default: [:]].map { model, accumulator in accumulator.entry(model: model) }
+                // Sorted by name: dictionary order differs between runs and platforms.
+                models: modelsByDay[day, default: [:]]
+                    .sorted { $0.key < $1.key }
+                    .map { model, accumulator in accumulator.entry(model: model) }
             )
         })
         return LogUsageScan(

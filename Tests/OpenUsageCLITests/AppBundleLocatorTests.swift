@@ -39,4 +39,18 @@ final class AppBundleLocatorTests: XCTestCase {
 
         XCTAssertEqual(located.bundleIdentifier, "com.example.dev")
     }
+
+    func testFallsBackToThePlatformSettingsDomain() {
+        let located = AppBundleLocator.locate(
+            executableURL: URL(fileURLWithPath: "/tmp/openusage"),
+            environment: [:]
+        )
+
+        #if os(Windows)
+        XCTAssertEqual(located.bundleIdentifier, "io.github.burguela.quotatray")
+        #else
+        XCTAssertEqual(located.bundleIdentifier, "com.robinebers.openusage")
+        #endif
+        XCTAssertNil(located.version)
+    }
 }

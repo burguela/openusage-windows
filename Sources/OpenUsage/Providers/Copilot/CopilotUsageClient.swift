@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// Calls GitHub's internal Copilot usage endpoint with a GitHub OAuth token. Mirrors the headers the
 /// official Copilot client sends; `Authorization` uses the `token` scheme (not `Bearer`), which is what

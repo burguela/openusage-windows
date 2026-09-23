@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 struct ZAIUsageClient: Sendable {
     static let subscriptionURL = URL(string: "https://api.z.ai/api/biz/subscription/list")!

@@ -196,18 +196,18 @@ enum CopilotUsageMapper {
             return nil
         }
         if let date = OpenUsageISO8601.date(from: raw) { return date }
-        return dayOnlyFormatter.date(from: raw)
+        return dayOnlyFormatter.with { $0.date(from: raw) }
     }
 
-    /// `nonisolated(unsafe)` is sound: `DateFormatter` is documented thread-safe on macOS 10.9+, and the
-    /// formatter is never mutated after creation (same pattern as `CursorUsageCSV`/`OpenUsageISO8601`).
-    private nonisolated(unsafe) static let dayOnlyFormatter: DateFormatter = {
+    /// Never mutated after creation, and shared through `SharedFormatter` (same pattern as
+    /// `CursorUsageCSV`/`OpenUsageISO8601`).
+    private static let dayOnlyFormatter: SharedFormatter<DateFormatter> = {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.dateFormat = "yyyy-MM-dd"
-        return formatter
+        return SharedFormatter(formatter)
     }()
 }
 

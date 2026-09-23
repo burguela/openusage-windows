@@ -18,7 +18,7 @@ enum DevinAuthError: Error, LocalizedError, Equatable {
 
 struct DevinAuthStore: Sendable {
     static let credentialsPath = "~/.local/share/devin/credentials.toml"
-    static let stateDBPath = "~/Library/Application Support/Devin/User/globalStorage/state.vscdb"
+    static let stateDBPath = "~/\(Platform.desktopAppDataRelativePath("Devin"))/User/globalStorage/state.vscdb"
     static let defaultAPIServerURL = "https://server.codeium.com"
 
     var files: TextFileAccessing

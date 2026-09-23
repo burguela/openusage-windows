@@ -1,0 +1,1114 @@
+{
+ "appVersion": "0.7.0",
+ "generatedAt": "2026-09-23T16:00:00.000Z",
+ "meterStyle": "left",
+ "providers": [
+  {
+   "displayName": "Claude",
+   "enabled": true,
+   "id": "claude",
+   "isError": false,
+   "links": [
+    {
+     "label": "Status",
+     "url": "https://status.anthropic.com/"
+    },
+    {
+     "label": "Dashboard",
+     "url": "https://claude.ai/settings/usage"
+    }
+   ],
+   "notice": null,
+   "plan": "Team 5x",
+   "refreshedAt": "2026-09-23T15:58:00.000Z",
+   "rows": [
+    {
+     "compactValue": "100%",
+     "detail": "Resets in 5h",
+     "fraction": 1.0,
+     "hasData": true,
+     "headline": "100% left",
+     "id": "claude.session",
+     "kind": "meter",
+     "onDemand": false,
+     "paceFlame": false,
+     "paceNote": null,
+     "paceTick": null,
+     "pinned": true,
+     "severity": "normal",
+     "title": "Session"
+    },
+    {
+     "compactValue": "36%",
+     "detail": "Resets in 1d 6h",
+     "fraction": 0.36,
+     "hasData": true,
+     "headline": "36% left",
+     "id": "claude.weekly",
+     "kind": "meter",
+     "onDemand": false,
+     "paceFlame": false,
+     "paceNote": "~22% left at reset",
+     "paceTick": 0.58,
+     "paceTooltip": "~22% left at reset",
+     "pinned": true,
+     "severity": "normal",
+     "title": "Weekly"
+    },
+    {
+     "compactValue": "27%",
+     "detail": "Resets in 1d 6h",
+     "fraction": 0.27,
+     "hasData": true,
+     "headline": "27% left",
+     "id": "claude.fable",
+     "kind": "meter",
+     "onDemand": false,
+     "paceFlame": false,
+     "paceNote": "~11% left at reset",
+     "paceTick": 0.58,
+     "paceTooltip": "~11% left at reset",
+     "pinned": false,
+     "severity": "normal",
+     "title": "Fable"
+    },
+    {
+     "compactValue": "\u2014",
+     "detail": "No data",
+     "fraction": 0.0,
+     "hasData": false,
+     "headline": "\u2014",
+     "id": "claude.extra",
+     "kind": "meter",
+     "onDemand": false,
+     "paceFlame": false,
+     "paceNote": null,
+     "paceTick": null,
+     "pinned": false,
+     "severity": "none",
+     "title": "Extra Usage"
+    },
+    {
+     "compactValue": "2",
+     "hasData": true,
+     "headline": "2 available",
+     "id": "claude.rateLimitResets",
+     "kind": "value",
+     "onDemand": true,
+     "paceFlame": false,
+     "pinned": false,
+     "title": "Rate Limit Resets"
+    },
+    {
+     "chart": [
+      {
+       "label": "Sep 1",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 2",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 3",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 4",
+       "readout": "$30.00",
+       "value": 3
+      },
+      {
+       "label": "Sep 5",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 6",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 7",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 8",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 9",
+       "readout": "$10.00",
+       "value": 1
+      },
+      {
+       "label": "Sep 10",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 11",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 12",
+       "readout": "$20.00",
+       "value": 2
+      },
+      {
+       "label": "Sep 13",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 14",
+       "readout": "$50.00",
+       "value": 5
+      },
+      {
+       "label": "Sep 15",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 16",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 17",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 18",
+       "readout": "$10.00",
+       "value": 1
+      },
+      {
+       "label": "Sep 19",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 20",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 21",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 22",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 23",
+       "readout": "$40.00",
+       "value": 4
+      },
+      {
+       "label": "Sep 24",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 25",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 26",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 27",
+       "readout": "$20.00",
+       "value": 2
+      },
+      {
+       "label": "Sep 28",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 29",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 30",
+       "readout": "$60.00",
+       "value": 6
+      }
+     ],
+     "compactValue": "",
+     "hasData": true,
+     "headline": "",
+     "id": "claude.trend",
+     "kind": "chart",
+     "onDemand": false,
+     "paceFlame": false,
+     "pinned": false,
+     "title": "Usage Trend"
+    },
+    {
+     "compactValue": "$49.85",
+     "hasData": true,
+     "headline": "$49.85 \u00b7 35.8M tokens",
+     "id": "claude.today",
+     "kind": "value",
+     "onDemand": true,
+     "paceFlame": false,
+     "pinned": false,
+     "subtitle": null,
+     "title": "Today"
+    },
+    {
+     "compactValue": "$1.31",
+     "hasData": true,
+     "headline": "$1.31 \u00b7 738.5K tokens",
+     "id": "claude.yesterday",
+     "kind": "value",
+     "onDemand": true,
+     "paceFlame": false,
+     "pinned": false,
+     "subtitle": null,
+     "title": "Yesterday"
+    },
+    {
+     "compactValue": "$6,042.64",
+     "hasData": true,
+     "headline": "$6,042.64 \u00b7 1.9B tokens",
+     "id": "claude.last30",
+     "kind": "value",
+     "onDemand": true,
+     "paceFlame": false,
+     "pinned": false,
+     "subtitle": null,
+     "title": "Last 30 Days"
+    }
+   ]
+  },
+  {
+   "displayName": "Codex",
+   "enabled": true,
+   "id": "codex",
+   "isError": false,
+   "links": [
+    {
+     "label": "Status",
+     "url": "https://status.openai.com/"
+    },
+    {
+     "label": "Dashboard",
+     "url": "https://chatgpt.com/codex/settings/usage"
+    }
+   ],
+   "plan": "Business Premium",
+   "refreshedAt": "2026-09-23T15:58:00.000Z",
+   "rows": [
+    {
+     "compactValue": "12%",
+     "detail": "Resets in 1h 12m",
+     "fraction": 0.12,
+     "hasData": true,
+     "headline": "12% left",
+     "id": "codex.session",
+     "kind": "meter",
+     "onDemand": false,
+     "paceFlame": true,
+     "paceNote": "Limit in 38m",
+     "paceTick": 0.4,
+     "paceTooltip": "Limit in 38m",
+     "pinned": true,
+     "severity": "critical",
+     "title": "Session"
+    },
+    {
+     "compactValue": "98%",
+     "detail": "Resets in 6d 2h",
+     "fraction": 0.98,
+     "hasData": true,
+     "headline": "98% left",
+     "id": "codex.weekly",
+     "kind": "meter",
+     "onDemand": false,
+     "paceFlame": false,
+     "paceNote": null,
+     "paceTick": null,
+     "pinned": true,
+     "severity": "normal",
+     "title": "Weekly"
+    },
+    {
+     "compactValue": "100%",
+     "detail": "Not started",
+     "fraction": 1.0,
+     "hasData": true,
+     "headline": "100% left",
+     "id": "codex.spark",
+     "kind": "meter",
+     "onDemand": true,
+     "paceFlame": false,
+     "paceNote": null,
+     "paceTick": null,
+     "pinned": false,
+     "severity": "normal",
+     "title": "Spark"
+    },
+    {
+     "compactValue": "100%",
+     "detail": "Resets in 6d 2h",
+     "fraction": 1.0,
+     "hasData": true,
+     "headline": "100% left",
+     "id": "codex.sparkWeekly",
+     "kind": "meter",
+     "onDemand": true,
+     "paceFlame": false,
+     "paceNote": null,
+     "paceTick": null,
+     "pinned": false,
+     "severity": "normal",
+     "title": "Spark Weekly"
+    },
+    {
+     "compactValue": "$0.00",
+     "hasData": true,
+     "headline": "$0.00",
+     "id": "codex.credits",
+     "kind": "value",
+     "onDemand": true,
+     "paceFlame": false,
+     "pinned": false,
+     "title": "Extra Usage"
+    },
+    {
+     "compactValue": "0",
+     "hasData": true,
+     "headline": "0 available",
+     "id": "codex.rateLimitResets",
+     "kind": "value",
+     "onDemand": true,
+     "paceFlame": false,
+     "pinned": false,
+     "title": "Rate Limit Resets"
+    },
+    {
+     "chart": [
+      {
+       "label": "Sep 1",
+       "readout": "$10.00",
+       "value": 1
+      },
+      {
+       "label": "Sep 2",
+       "readout": "$20.00",
+       "value": 2
+      },
+      {
+       "label": "Sep 3",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 4",
+       "readout": "$30.00",
+       "value": 3
+      },
+      {
+       "label": "Sep 5",
+       "readout": "$40.00",
+       "value": 4
+      },
+      {
+       "label": "Sep 6",
+       "readout": "$20.00",
+       "value": 2
+      },
+      {
+       "label": "Sep 7",
+       "readout": "$10.00",
+       "value": 1
+      },
+      {
+       "label": "Sep 8",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 9",
+       "readout": "$30.00",
+       "value": 3
+      },
+      {
+       "label": "Sep 10",
+       "readout": "$50.00",
+       "value": 5
+      },
+      {
+       "label": "Sep 11",
+       "readout": "$20.00",
+       "value": 2
+      },
+      {
+       "label": "Sep 12",
+       "readout": "$10.00",
+       "value": 1
+      },
+      {
+       "label": "Sep 13",
+       "readout": "$40.00",
+       "value": 4
+      },
+      {
+       "label": "Sep 14",
+       "readout": "$60.00",
+       "value": 6
+      },
+      {
+       "label": "Sep 15",
+       "readout": "$30.00",
+       "value": 3
+      },
+      {
+       "label": "Sep 16",
+       "readout": "$20.00",
+       "value": 2
+      },
+      {
+       "label": "Sep 17",
+       "readout": "$10.00",
+       "value": 1
+      },
+      {
+       "label": "Sep 18",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 19",
+       "readout": "$20.00",
+       "value": 2
+      },
+      {
+       "label": "Sep 20",
+       "readout": "$30.00",
+       "value": 3
+      },
+      {
+       "label": "Sep 21",
+       "readout": "$40.00",
+       "value": 4
+      },
+      {
+       "label": "Sep 22",
+       "readout": "$50.00",
+       "value": 5
+      },
+      {
+       "label": "Sep 23",
+       "readout": "$20.00",
+       "value": 2
+      },
+      {
+       "label": "Sep 24",
+       "readout": "$10.00",
+       "value": 1
+      },
+      {
+       "label": "Sep 25",
+       "readout": "$30.00",
+       "value": 3
+      },
+      {
+       "label": "Sep 26",
+       "readout": "$40.00",
+       "value": 4
+      },
+      {
+       "label": "Sep 27",
+       "readout": "$60.00",
+       "value": 6
+      },
+      {
+       "label": "Sep 28",
+       "readout": "$50.00",
+       "value": 5
+      },
+      {
+       "label": "Sep 29",
+       "readout": "$30.00",
+       "value": 3
+      },
+      {
+       "label": "Sep 30",
+       "readout": "$20.00",
+       "value": 2
+      }
+     ],
+     "compactValue": "",
+     "hasData": true,
+     "headline": "",
+     "id": "codex.trend",
+     "kind": "chart",
+     "onDemand": false,
+     "paceFlame": false,
+     "pinned": false,
+     "title": "Usage Trend"
+    },
+    {
+     "compactValue": "$12.40",
+     "hasData": true,
+     "headline": "$12.40 \u00b7 9.1M tokens",
+     "id": "codex.today",
+     "kind": "value",
+     "onDemand": true,
+     "paceFlame": false,
+     "pinned": false,
+     "subtitle": null,
+     "title": "Today"
+    },
+    {
+     "compactValue": "$8.02",
+     "hasData": true,
+     "headline": "$8.02 \u00b7 5.5M tokens",
+     "id": "codex.yesterday",
+     "kind": "value",
+     "onDemand": true,
+     "paceFlame": false,
+     "pinned": false,
+     "subtitle": null,
+     "title": "Yesterday"
+    },
+    {
+     "compactValue": "$134.46",
+     "hasData": true,
+     "headline": "$134.46 \u00b7 98.2M tokens",
+     "id": "codex.last30",
+     "kind": "value",
+     "onDemand": true,
+     "paceFlame": false,
+     "pinned": false,
+     "subtitle": null,
+     "title": "Last 30 Days"
+    }
+   ],
+   "staleness": "Last updated 25 minutes ago"
+  },
+  {
+   "displayName": "Cursor",
+   "enabled": true,
+   "id": "cursor",
+   "isError": false,
+   "links": [
+    {
+     "label": "Status",
+     "url": "https://status.cursor.com/"
+    },
+    {
+     "label": "Dashboard",
+     "url": "https://www.cursor.com/dashboard"
+    }
+   ],
+   "plan": "Ultra",
+   "refreshedAt": "2026-09-23T15:58:00.000Z",
+   "rows": [
+    {
+     "compactValue": "62%",
+     "detail": "Resets in 12d",
+     "fraction": 0.62,
+     "hasData": true,
+     "headline": "62% left",
+     "id": "cursor.usage",
+     "kind": "meter",
+     "onDemand": false,
+     "paceFlame": false,
+     "paceNote": "~3% spare",
+     "paceTick": 0.55,
+     "paceTooltip": "~3% spare",
+     "pinned": false,
+     "severity": "warning",
+     "title": "Total Usage"
+    },
+    {
+     "compactValue": "71%",
+     "detail": "Resets in 12d",
+     "fraction": 0.71,
+     "hasData": true,
+     "headline": "71% left",
+     "id": "cursor.auto",
+     "kind": "meter",
+     "onDemand": false,
+     "paceFlame": false,
+     "paceNote": null,
+     "paceTick": null,
+     "pinned": true,
+     "severity": "normal",
+     "title": "Cursor Models"
+    },
+    {
+     "compactValue": "44%",
+     "detail": "Resets in 12d",
+     "fraction": 0.44,
+     "hasData": true,
+     "headline": "44% left",
+     "id": "cursor.api",
+     "kind": "meter",
+     "onDemand": false,
+     "paceFlame": false,
+     "paceNote": null,
+     "paceTick": null,
+     "pinned": true,
+     "severity": "normal",
+     "title": "Other Models"
+    },
+    {
+     "compactValue": "100%",
+     "detail": "Resets in 12d",
+     "fraction": 1.0,
+     "hasData": true,
+     "headline": "100% left",
+     "id": "cursor.grokBot",
+     "kind": "meter",
+     "onDemand": true,
+     "paceFlame": false,
+     "paceNote": null,
+     "paceTick": null,
+     "pinned": false,
+     "severity": "normal",
+     "title": "Grok Bot"
+    },
+    {
+     "compactValue": "$0",
+     "detail": "Resets in 12d",
+     "fraction": 1.0,
+     "hasData": true,
+     "headline": "$0 of $50",
+     "id": "cursor.onDemand",
+     "kind": "meter",
+     "onDemand": true,
+     "paceFlame": false,
+     "paceNote": null,
+     "paceTick": null,
+     "pinned": false,
+     "severity": "normal",
+     "title": "Extra Usage"
+    },
+    {
+     "chart": [
+      {
+       "label": "Sep 1",
+       "readout": "$10.00",
+       "value": 1
+      },
+      {
+       "label": "Sep 2",
+       "readout": "$20.00",
+       "value": 2
+      },
+      {
+       "label": "Sep 3",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 4",
+       "readout": "$30.00",
+       "value": 3
+      },
+      {
+       "label": "Sep 5",
+       "readout": "$40.00",
+       "value": 4
+      },
+      {
+       "label": "Sep 6",
+       "readout": "$20.00",
+       "value": 2
+      },
+      {
+       "label": "Sep 7",
+       "readout": "$10.00",
+       "value": 1
+      },
+      {
+       "label": "Sep 8",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 9",
+       "readout": "$30.00",
+       "value": 3
+      },
+      {
+       "label": "Sep 10",
+       "readout": "$50.00",
+       "value": 5
+      },
+      {
+       "label": "Sep 11",
+       "readout": "$20.00",
+       "value": 2
+      },
+      {
+       "label": "Sep 12",
+       "readout": "$10.00",
+       "value": 1
+      },
+      {
+       "label": "Sep 13",
+       "readout": "$40.00",
+       "value": 4
+      },
+      {
+       "label": "Sep 14",
+       "readout": "$60.00",
+       "value": 6
+      },
+      {
+       "label": "Sep 15",
+       "readout": "$30.00",
+       "value": 3
+      },
+      {
+       "label": "Sep 16",
+       "readout": "$20.00",
+       "value": 2
+      },
+      {
+       "label": "Sep 17",
+       "readout": "$10.00",
+       "value": 1
+      },
+      {
+       "label": "Sep 18",
+       "readout": "$0.00",
+       "value": 0
+      },
+      {
+       "label": "Sep 19",
+       "readout": "$20.00",
+       "value": 2
+      },
+      {
+       "label": "Sep 20",
+       "readout": "$30.00",
+       "value": 3
+      },
+      {
+       "label": "Sep 21",
+       "readout": "$40.00",
+       "value": 4
+      },
+      {
+       "label": "Sep 22",
+       "readout": "$50.00",
+       "value": 5
+      },
+      {
+       "label": "Sep 23",
+       "readout": "$20.00",
+       "value": 2
+      },
+      {
+       "label": "Sep 24",
+       "readout": "$10.00",
+       "value": 1
+      },
+      {
+       "label": "Sep 25",
+       "readout": "$30.00",
+       "value": 3
+      },
+      {
+       "label": "Sep 26",
+       "readout": "$40.00",
+       "value": 4
+      },
+      {
+       "label": "Sep 27",
+       "readout": "$60.00",
+       "value": 6
+      },
+      {
+       "label": "Sep 28",
+       "readout": "$50.00",
+       "value": 5
+      },
+      {
+       "label": "Sep 29",
+       "readout": "$30.00",
+       "value": 3
+      },
+      {
+       "label": "Sep 30",
+       "readout": "$20.00",
+       "value": 2
+      }
+     ],
+     "compactValue": "",
+     "hasData": true,
+     "headline": "",
+     "id": "cursor.trend",
+     "kind": "chart",
+     "onDemand": false,
+     "paceFlame": false,
+     "pinned": false,
+     "title": "Usage Trend"
+    },
+    {
+     "compactValue": "$212.10",
+     "hasData": true,
+     "headline": "$212.10",
+     "id": "cursor.today",
+     "kind": "value",
+     "note": "From your Cursor usage history.",
+     "onDemand": true,
+     "paceFlame": false,
+     "pinned": false,
+     "title": "Today"
+    },
+    {
+     "compactValue": "$388.40",
+     "hasData": true,
+     "headline": "$388.40",
+     "id": "cursor.yesterday",
+     "kind": "value",
+     "note": "From your Cursor usage history.",
+     "onDemand": true,
+     "paceFlame": false,
+     "pinned": false,
+     "title": "Yesterday"
+    },
+    {
+     "compactValue": "$7,121.12",
+     "hasData": true,
+     "headline": "$7,121.12",
+     "id": "cursor.last30",
+     "kind": "value",
+     "note": "From your Cursor usage history.",
+     "onDemand": true,
+     "paceFlame": false,
+     "pinned": false,
+     "title": "Last 30 Days"
+    }
+   ]
+  },
+  {
+   "displayName": "Antigravity",
+   "enabled": false,
+   "id": "antigravity",
+   "isError": false,
+   "links": [],
+   "rows": []
+  },
+  {
+   "displayName": "Copilot",
+   "enabled": false,
+   "id": "copilot",
+   "isError": false,
+   "links": [
+    {
+     "label": "Status",
+     "url": "https://www.githubstatus.com/"
+    },
+    {
+     "label": "Dashboard",
+     "url": "https://github.com/settings/billing"
+    }
+   ],
+   "rows": []
+  },
+  {
+   "displayName": "Devin",
+   "enabled": false,
+   "id": "devin",
+   "isError": false,
+   "links": [
+    {
+     "label": "Dashboard",
+     "url": "https://app.devin.ai/settings/plans"
+    }
+   ],
+   "rows": []
+  },
+  {
+   "displayName": "Grok",
+   "enabled": false,
+   "id": "grok",
+   "isError": false,
+   "links": [
+    {
+     "label": "Usage",
+     "url": "https://grok.com/?_s=usage"
+    }
+   ],
+   "rows": []
+  },
+  {
+   "displayName": "Ollama",
+   "enabled": false,
+   "id": "ollama",
+   "isError": false,
+   "links": [
+    {
+     "label": "Usage",
+     "url": "https://ollama.com/settings"
+    },
+    {
+     "label": "API Keys",
+     "url": "https://ollama.com/settings/keys"
+    }
+   ],
+   "rows": []
+  },
+  {
+   "displayName": "OpenCode",
+   "enabled": false,
+   "id": "opencode",
+   "isError": false,
+   "links": [
+    {
+     "label": "Dashboard",
+     "url": "https://opencode.ai/auth"
+    }
+   ],
+   "rows": []
+  },
+  {
+   "displayName": "OpenRouter",
+   "enabled": false,
+   "id": "openrouter",
+   "isError": false,
+   "links": [
+    {
+     "label": "Activity",
+     "url": "https://openrouter.ai/activity"
+    },
+    {
+     "label": "Credits",
+     "url": "https://openrouter.ai/settings/credits"
+    }
+   ],
+   "rows": []
+  },
+  {
+   "displayName": "Z.ai",
+   "enabled": false,
+   "id": "zai",
+   "isError": false,
+   "links": [
+    {
+     "label": "Dashboard",
+     "url": "https://z.ai/manage-apikey/coding-plan/personal/my-plan"
+    },
+    {
+     "label": "API Keys",
+     "url": "https://z.ai/manage-apikey/apikey-list"
+    }
+   ],
+   "rows": []
+  }
+ ],
+ "schema": "openusage.desktop.v1",
+ "totalSpend": {
+  "periods": [
+   {
+    "center": "$274",
+    "id": "today",
+    "label": "Today",
+    "slices": [
+     {
+      "amount": 212.1,
+      "displayName": "Cursor",
+      "providerId": "cursor",
+      "value": "$212.10"
+     },
+     {
+      "amount": 49.85,
+      "displayName": "Claude",
+      "providerId": "claude",
+      "value": "$49.85"
+     },
+     {
+      "amount": 12.4,
+      "displayName": "Codex",
+      "providerId": "codex",
+      "value": "$12.40"
+     }
+    ],
+    "unit": "dollars"
+   },
+   {
+    "center": "$398",
+    "id": "yesterday",
+    "label": "Yesterday",
+    "slices": [
+     {
+      "amount": 388.4,
+      "displayName": "Cursor",
+      "providerId": "cursor",
+      "value": "$388.40"
+     },
+     {
+      "amount": 8.02,
+      "displayName": "Codex",
+      "providerId": "codex",
+      "value": "$8.02"
+     },
+     {
+      "amount": 1.31,
+      "displayName": "Claude",
+      "providerId": "claude",
+      "value": "$1.31"
+     }
+    ],
+    "unit": "dollars"
+   },
+   {
+    "center": "$13.3K",
+    "id": "last30",
+    "label": "30 Days",
+    "slices": [
+     {
+      "amount": 7121.12,
+      "displayName": "Cursor",
+      "providerId": "cursor",
+      "value": "$7,121.12"
+     },
+     {
+      "amount": 6042.64,
+      "displayName": "Claude",
+      "providerId": "claude",
+      "value": "$6,042.64"
+     },
+     {
+      "amount": 134.46,
+      "displayName": "Codex",
+      "providerId": "codex",
+      "value": "$134.46"
+     }
+    ],
+    "unit": "dollars"
+   }
+  ],
+  "providers": [
+   "Claude",
+   "Codex",
+   "Cursor"
+  ]
+ }
+}

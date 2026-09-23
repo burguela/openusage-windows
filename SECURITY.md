@@ -1,5 +1,11 @@
 # Security Policy
 
+> **About this fork:** [openusage-windows](https://github.com/burguela/openusage-windows) is an unofficial
+> fork of OpenUsage. Report vulnerabilities in Quota Tray, the Windows app (the tray app, packaging, and Windows-only
+> code paths) privately through the fork's
+> [security advisories](https://github.com/burguela/openusage-windows/security/advisories/new). The policy
+> below is the original project's; use it for issues in the shared code that also affect the official app.
+
 ## Reporting a Vulnerability
 
 If you find a security vulnerability in OpenUsage, please report it responsibly. Do not open a public issue.

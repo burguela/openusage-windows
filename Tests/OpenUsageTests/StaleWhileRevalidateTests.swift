@@ -1,5 +1,7 @@
 import Observation
+#if canImport(os)
 import os
+#endif
 import XCTest
 @testable import OpenUsage
 

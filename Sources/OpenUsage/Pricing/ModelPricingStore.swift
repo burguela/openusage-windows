@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// Owns the app's model pricing data: bundled snapshots for offline first launch, on-disk caches in
 /// Application Support, and hourly refreshes from the live feeds (LiteLLM, models.dev, and the
@@ -56,8 +59,8 @@ actor ModelPricingStore {
     ]
 
     private static var defaultCacheDirectory: URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("OpenUsage/pricing", isDirectory: true)
+        Platform.appDataDirectory
+            .appendingPathComponent("\(Platform.appFolderName)/pricing", isDirectory: true)
     }
 
     private static func bundledResourceData(_ resourceName: String) -> Data? {

@@ -27,9 +27,16 @@ enum CopilotAuthError: Error, LocalizedError, Equatable {
 /// 3. GitHub CLI Keychain item (service `gh:github.com`) — go-keyring-wrapped, used when `gh` stores the
 ///    token in the system keyring instead of the file.
 struct CopilotAuthStore: Sendable {
+    #if os(Windows)
+    // Copilot's editor plugins write to `%LOCALAPPDATA%\github-copilot`; `gh` to `%APPDATA%\GitHub CLI`.
+    static let editorAppsPath = "~/AppData/Local/github-copilot/apps.json"
+    static let editorHostsPath = "~/AppData/Local/github-copilot/hosts.json"
+    static let ghHostsPath = "~/AppData/Roaming/GitHub CLI/hosts.yml"
+    #else
     static let editorAppsPath = "~/.config/github-copilot/apps.json"
     static let editorHostsPath = "~/.config/github-copilot/hosts.json"
     static let ghHostsPath = "~/.config/gh/hosts.yml"
+    #endif
     static let ghKeychainService = "gh:github.com"
 
     var files: TextFileAccessing

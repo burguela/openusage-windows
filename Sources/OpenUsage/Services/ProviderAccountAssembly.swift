@@ -153,7 +153,7 @@ struct ProviderAccountAssembly {
             listDirectories: listDesktopOrganizationDirectories
         )
         let desktopAnchor = desktop.homeDirectory()
-            .appendingPathComponent("Library/Application Support/Claude").path
+            .appendingPathComponent(ClaudeDesktopAuthStore.userDataRelativePath).path
         for organization in desktopOrganizations {
             let source = ProviderAccountSource(
                 kind: .defaultHome, anchor: desktopAnchor, holdsDefaultSource: false
@@ -269,7 +269,7 @@ struct ProviderAccountAssembly {
         let active = desktop.load(allowInteraction: false, expectedAccountUUID: user)
         let activeOrganization = active.organization
 
-        let root = desktop.homeDirectory().appendingPathComponent("Library/Application Support/Claude")
+        let root = desktop.homeDirectory().appendingPathComponent(ClaudeDesktopAuthStore.userDataRelativePath)
         let memberships = Set(["claude-code-sessions", "local-agent-mode-sessions"].flatMap { directory in
             listDirectories(root.appendingPathComponent(directory).appendingPathComponent(user))
                 .compactMap { UUID(uuidString: $0)?.uuidString.lowercased() }
