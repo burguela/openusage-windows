@@ -58,7 +58,7 @@ public partial class PopupWindow
         var about = Section("About", theme, body, last: true);
         var credit = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         credit.Children.Add(Text("Based on OpenUsage", theme.TextPrimary, 13));
-        credit.Children.Add(Text("By Robin Ebers and contributors. Unofficial fork.", theme.TextSecondary, 11));
+        credit.Children.Add(Text("By Robin Ebers and contributors", theme.TextSecondary, 11, wrap: true));
         about.Children.Add(SettingsRow(credit,
             SmallButton(Text("View Original", theme.TextPrimary, SupportingSize, FontWeights.Medium), theme,
                 () => OpenUrl(OriginalProjectUrl)), theme));
