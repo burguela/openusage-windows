@@ -83,6 +83,17 @@ enum Platform {
             ?? FileManager.default.temporaryDirectory
     }
 
+    /// Where a desktop app (Electron or VS Code based: Claude, Cursor, Devin) keeps its per-user data,
+    /// relative to the home directory: `Library/Application Support/<App>` on macOS and
+    /// `AppData/Roaming/<App>` (`%APPDATA%`) on Windows.
+    static func desktopAppDataRelativePath(_ appName: String) -> String {
+        #if os(Windows)
+        "AppData/Roaming/\(appName)"
+        #else
+        "Library/Application Support/\(appName)"
+        #endif
+    }
+
     /// Set a variable in this process's environment (seen by libcurl and child processes).
     static func setEnvironmentVariable(_ name: String, _ value: String) {
         #if os(Windows)

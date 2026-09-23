@@ -20,7 +20,11 @@ struct AntigravityAuthStore: Sendable {
     static let keychainAccount = "antigravity"
     /// Our own cache of refreshed access tokens, so a Google OAuth refresh happens ~once per token
     /// lifetime instead of every refresh cycle. We never write back to Antigravity's keychain item.
+    #if os(Windows)
+    static let cachePath = "~/AppData/Local/OpenUsage/antigravity/auth.json"
+    #else
     static let cachePath = "~/Library/Application Support/OpenUsage/antigravity/auth.json"
+    #endif
     /// Treat a token with less than this left as already expired (skip straight to refresh).
     static let refreshBuffer: TimeInterval = 60
 

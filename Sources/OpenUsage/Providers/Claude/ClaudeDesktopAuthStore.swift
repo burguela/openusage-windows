@@ -87,11 +87,7 @@ enum ClaudeDesktopCredentialError: Error, Sendable {
 /// valid access token and waits for Desktop to renew it.
 struct ClaudeDesktopAuthStore: Sendable {
     /// Electron's `userData` folder for Claude Desktop, relative to the home directory.
-    #if os(Windows)
-    static let userDataRelativePath = "AppData/Roaming/Claude"
-    #else
-    static let userDataRelativePath = "Library/Application Support/Claude"
-    #endif
+    static let userDataRelativePath = Platform.desktopAppDataRelativePath("Claude")
     private static let configRelativePath = "\(userDataRelativePath)/config.json"
     private static let cookieRelativePaths = [
         "\(userDataRelativePath)/Cookies",

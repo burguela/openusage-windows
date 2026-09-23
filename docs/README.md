@@ -12,6 +12,7 @@ What the app does and how it behaves. These pages describe **behavior, not visua
 - [Model pricing](pricing.md) — how spend tiles price tokens, and where the rates come from
 - [Updates](updates.md) — automatic updates, manual checks, and the beta channel
 - [Privacy & usage data](privacy.md) — daily activity, crash reports, and optional usage analytics
+- [Windows](windows.md) — the Windows tray app: using it, where credentials and files live, what's Mac-only
 
 ## Integrations
 

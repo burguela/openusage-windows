@@ -20,6 +20,10 @@ brew install --cask openusage
 
 Either way, the app updates itself in place via signed, notarized [Sparkle](docs/updates.md) updates. Requires macOS 15 (Sequoia) or later.
 
+**Windows:** OpenUsage also runs on Windows 10 and 11 as a tray app built from the same engine. Download the
+`OpenUsage-windows-x64` artifact from the latest run of the **Windows** workflow, unzip it, and run
+`OpenUsage.exe`. See [docs/windows.md](docs/windows.md) for what it supports and how to build it.
+
 ## Supported Providers
 
 - **[Antigravity](docs/providers/antigravity.md)** — shared Gemini and Claude pool quotas, 5-hour and weekly windows
@@ -59,7 +63,7 @@ For working on the code, see the developer docs: [architecture](docs/architectur
 
 ## Requirements
 
-- macOS 15 (Sequoia) or later
+- macOS 15 (Sequoia) or later, or Windows 10/11 x64 for the [Windows app](docs/windows.md)
 - Universal binary — runs natively on both Apple Silicon and Intel Macs
 
 The Today / Yesterday / Last 30 Days spend tiles are computed natively from local CLI logs (Claude,

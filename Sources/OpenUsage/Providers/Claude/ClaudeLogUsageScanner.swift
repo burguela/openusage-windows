@@ -239,7 +239,8 @@ actor ClaudeLogUsageScanner {
     /// known levels — session dirs contain full sandbox homes we must not recurse into.
     private static func coworkClaudeDirs(home: URL, organizationID: String?, accountID: String?) -> [URL] {
         let base = home
-            .appendingPathComponent("Library/Application Support/Claude/local-agent-mode-sessions")
+            .appendingPathComponent(ClaudeDesktopAuthStore.userDataRelativePath)
+            .appendingPathComponent("local-agent-mode-sessions")
 
         func subdirectories(of url: URL) -> [URL] {
             let contents = (try? FileManager.default.contentsOfDirectory(
@@ -286,7 +287,8 @@ actor ClaudeLogUsageScanner {
         claimsDefaultHome: Bool
     ) -> [JSONLScanning.DiscoveredFile] {
         let coworkPrefix = homeDirectory()
-            .appendingPathComponent("Library/Application Support/Claude/local-agent-mode-sessions")
+            .appendingPathComponent(ClaudeDesktopAuthStore.userDataRelativePath)
+            .appendingPathComponent("local-agent-mode-sessions")
             .resolvingSymlinksInPath().path + "/"
         let filesByPath = Dictionary(files.map { ($0.path, $0) }, uniquingKeysWith: { first, _ in first })
         var seenPaths: Set<String> = []
@@ -357,7 +359,9 @@ actor ClaudeLogUsageScanner {
     }
 
     private var desktopSessionIndexRoot: URL {
-        homeDirectory().appendingPathComponent("Library/Application Support/Claude/claude-code-sessions")
+        homeDirectory()
+            .appendingPathComponent(ClaudeDesktopAuthStore.userDataRelativePath)
+            .appendingPathComponent("claude-code-sessions")
     }
 
     private func indexedDesktopSessionIDs(accountID: String, organizationID: String) -> Set<String> {
