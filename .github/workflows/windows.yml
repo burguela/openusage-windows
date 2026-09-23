@@ -2,7 +2,7 @@ name: Windows
 
 # Builds Quota Tray, this fork's Windows app: the shared Swift engine (`openusage-cli.exe`, shipped as
 # `quotatray-engine.exe`) plus the WPF notification-area app (`QuotaTray.exe`), packaged into one zip
-# artifact. See docs/windows.md.
+# artifact and an installer. See docs/windows.md.
 on:
   push:
   pull_request:
@@ -110,22 +110,29 @@ jobs:
 
       - name: Smoke-test installer
         shell: pwsh
+        env:
+          # install.ps1 as pasted by a user, but with this build's installer and without starting the app.
+          QUOTATRAY_SETUP: ${{ github.workspace }}\dist\installer\QuotaTray-Setup-x64.exe
+          QUOTATRAY_NO_LAUNCH: '1'
         run: |
-          $setup = Get-ChildItem dist/installer/QuotaTray-Setup-*.exe | Select-Object -First 1
-          $p = Start-Process $setup.FullName -Wait -PassThru -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/TASKS=startup'
-          if ($p.ExitCode -ne 0) { throw "install failed ($($p.ExitCode))" }
+          Get-Content windows/installer/install.ps1 -Raw | Invoke-Expression
           $app = Join-Path $env:LOCALAPPDATA 'Programs\QuotaTray'
+          $menu = Join-Path ([Environment]::GetFolderPath('Programs')) 'Quota Tray.lnk'
+          if (-not (Test-Path $menu)) { throw 'the Start menu shortcut is missing' }
           $check = & (Join-Path $app 'quotatray-engine.exe') dashboard --cached | ConvertFrom-Json
           if ($check.schema -ne 'openusage.desktop.v1') { throw 'installed engine failed its smoke test' }
           $run = Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name QuotaTray -ErrorAction SilentlyContinue
           if (-not $run) { throw 'the startup task did not add Launch at Login' }
-          $p = Start-Process (Join-Path $app 'unins000.exe') -Wait -PassThru -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'
-          if ($p.ExitCode -ne 0) { throw "uninstall failed ($($p.ExitCode))" }
+          if ((Get-ItemProperty 'HKCU:\Software\QuotaTray').LaunchAtLoginDefaulted -ne 1) {
+            throw 'the installer did not record the Launch at Login default'
+          }
+          Get-Content windows/installer/uninstall.ps1 -Raw | Invoke-Expression
           Start-Sleep -Seconds 2
           if (Test-Path (Join-Path $app 'QuotaTray.exe')) { throw 'uninstall left the app behind' }
           if (Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name QuotaTray -ErrorAction SilentlyContinue) {
             throw 'uninstall left Launch at Login behind'
           }
+          if (Test-Path $menu) { throw 'uninstall left the Start menu shortcut behind' }
 
       - uses: actions/upload-artifact@v4
         with:

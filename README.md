@@ -58,12 +58,20 @@ There are no signed releases of Quota Tray yet.
 
 1. Open the latest successful run of the **Windows** workflow in this repository's
    [Actions tab](https://github.com/burguela/openusage-windows/actions/workflows/windows.yml).
-2. Download the `QuotaTray-windows-setup` artifact, unzip it, and run `QuotaTray-Setup-<version>-x64.exe`.
-   It installs for your account only (no administrator rights), adds a Start menu entry, and can start
-   Quota Tray when you sign in. Prefer no installer? `QuotaTray-windows-x64` is the same app as a portable
-   folder.
-3. The icon appears in the notification area next to the clock (it may start in the `^` overflow; drag it
-   onto the taskbar to keep it visible).
+2. Download the `QuotaTray-windows-setup` artifact, unzip it, and run `QuotaTray-Setup-x64.exe`.
+   It installs for your account only (no administrator rights), adds a Start menu entry, and starts
+   Quota Tray when you sign in (you can untick that). Prefer no installer? `QuotaTray-windows-x64` is the
+   same app as a portable folder.
+3. Your pinned readings appear as numbers in the taskbar, next to the clock, like the Mac app's menu bar.
+   Uninstall from **Settings → Apps**.
+
+Once the fork publishes a GitHub release, PowerShell can do both steps:
+`irm https://github.com/burguela/openusage-windows/releases/latest/download/install.ps1 | iex` installs
+or updates, and the same URL ending in `uninstall.ps1` removes it.
+
+<p align="center">
+  <img src="docs/screenshots/windows-tray-dark.png" alt="Quota Tray's readings in the Windows taskbar" width="340">
+</p>
 
 The build isn't code-signed, so Windows SmartScreen may warn the first time; choose **More info → Run
 anyway**. Requires Windows 10 or 11 (x64). See [docs/windows.md](docs/windows.md) for how to use it, where

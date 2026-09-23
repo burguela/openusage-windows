@@ -3,6 +3,8 @@
 ; %LOCALAPPDATA%\Programs\QuotaTray, and it never touches other users.
 ;
 ;   iscc /DAppVersion=0.7.0 /DAppDir=dist\QuotaTray /DOutputDir=dist windows\installer\QuotaTray.iss
+;
+; install.ps1 and uninstall.ps1 next to this file wrap it for a paste-into-PowerShell install.
 
 #ifndef AppVersion
   #error Pass the version: /DAppVersion=x.y.z
@@ -31,7 +33,8 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 OutputDir={#OutputDir}
-OutputBaseFilename=QuotaTray-Setup-{#AppVersion}-x64
+; A fixed name, so releases/latest/download/QuotaTray-Setup-x64.exe always finds the newest one.
+OutputBaseFilename=QuotaTray-Setup-x64
 SetupIconFile=..\QuotaTray\Assets\QuotaTray.ico
 UninstallDisplayIcon={app}\QuotaTray.exe
 UninstallDisplayName=Quota Tray
@@ -43,6 +46,7 @@ WizardStyle=modern
 CloseApplications=no
 
 [Tasks]
+; Checked by default: like the app's own first launch, Quota Tray starts when you sign in.
 Name: "startup"; Description: "Start Quota Tray when I sign in to Windows"
 Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
 
@@ -56,6 +60,8 @@ Name: "{autodesktop}\Quota Tray"; Filename: "{app}\QuotaTray.exe"; Tasks: deskto
 [Registry]
 ; The same Run value the app's Launch at Login switch reads and writes (Services/LaunchAtLogin.cs).
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "QuotaTray"; ValueData: """{app}\QuotaTray.exe"""; Tasks: startup
+; Records that Launch at Login got its default here, so the app's first launch keeps what was picked above.
+Root: HKCU; Subkey: "Software\QuotaTray"; ValueType: dword; ValueName: "LaunchAtLoginDefaulted"; ValueData: 1
 
 [Run]
 Filename: "{app}\QuotaTray.exe"; Description: "Open Quota Tray"; Flags: nowait postinstall skipifsilent

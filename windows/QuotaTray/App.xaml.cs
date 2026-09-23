@@ -54,11 +54,18 @@ public partial class App : Application
         AppLog.Info($"Quota Tray starting ({Environment.OSVersion})");
         try
         {
+            // Launch at Login is on by default, like the installer's checked "Start when I sign in"
+            // (the installer records its choice, so turning it off there, or later, sticks).
+            if (!UiSettings.LaunchAtLoginDefaulted)
+            {
+                LaunchAtLogin.SetEnabled(true);
+                UiSettings.LaunchAtLoginDefaulted = true;
+            }
             LaunchAtLogin.RepairPathIfEnabled();
         }
         catch (Exception error)
         {
-            AppLog.Warn($"launch at login repair failed: {error.Message}");
+            AppLog.Warn($"launch at login setup failed: {error.Message}");
         }
 
         _tray = new TrayController(this);

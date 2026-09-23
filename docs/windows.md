@@ -23,15 +23,28 @@ The panel follows the Mac popover's layout and colors, in Windows' light or dark
 - **The footer** shows the version and the next automatic update; click "Next update in …" (or press
   F5 / Ctrl+R) to refresh every provider now.
 - **Options** (bottom right) opens Settings, the log folder, and Quit. Settings has Show Total Spend,
-  Launch at Login, Show Usage As (Left or Used), a switch per provider, Open Folder for logs, and an About
-  section that credits OpenUsage and links to the original project.
+  Launch at Login (on by default), Show Usage As (Left or Used), Icon Style (Text or Bars), a switch per
+  provider, Open Folder for logs, and an About section that credits OpenUsage and links to the original
+  project.
 - **Right-click the tray icon** for Open Quota Tray, Refresh Now, Settings, Launch at Login, Open Log
   Folder, and Quit Quota Tray.
 
-The tray icon sits in the notification area at the right end of the taskbar, next to the clock. It
-draws two small meters for the first two pinned rows that have data (Claude's Session and Weekly by
-default), in yellow or red when a limit is close. Hovering it lists every pinned reading as text. Unlike
-the Mac menu bar, a tray icon is a small square, so the numbers live in that hover text and the panel.
+### In the taskbar
+
+Like the numbers the Mac app pins to the menu bar, Quota Tray puts your pinned readings in the taskbar,
+in the notification area next to the clock:
+
+- **Text** (the default Icon Style) shows one icon per pinned reading with its number, for example 36 for
+  Claude's Weekly limit, over a thin meter. The number turns yellow or red when a limit is close, and it
+  follows Show Usage As (Left or Used). Hover an icon for what it is ("Claude Weekly, 36% left · Resets in
+  1d 6h"). Up to four readings show; values that don't fit a small square, such as dollar amounts, stay in
+  the panel.
+- **Bars** shows a single icon with small meters for the first two pinned readings; hovering it lists
+  every pinned reading.
+
+The pinned readings are the Mac app's default stars (for example Claude Session and Weekly, Codex
+Session and Weekly) for the providers you have turned on. With nothing to show yet, the Quota Tray icon
+appears instead.
 
 <p align="center">
   <img src="screenshots/windows-tray-light.png" alt="The Quota Tray icon on a light taskbar, with its hover text" width="340">
@@ -39,8 +52,10 @@ the Mac menu bar, a tray icon is a small square, so the numbers live in that hov
   <img src="screenshots/windows-tray-dark.png" alt="The Quota Tray icon on a dark taskbar, with its hover text" width="340">
 </p>
 
-Windows may place a new tray icon in the overflow (the `^` arrow); drag it onto the taskbar to keep it
-visible.
+Windows 11 normally hides a new app's icons behind the `^` arrow. Quota Tray switches each of its icons
+on once, the first time Windows lists it, so the numbers show right away; to hide one later, use
+**Settings → Personalization → Taskbar → Other system tray icons**, and Quota Tray leaves that choice
+alone. On Windows 10, drag the icons out of the `^` overflow onto the taskbar.
 
 <p align="center">
   <img src="screenshots/windows-dashboard-light.png" alt="The Windows panel in light mode" width="260">
@@ -56,14 +71,28 @@ There are no signed releases yet. Each successful run of the fork's
 [Windows workflow](https://github.com/burguela/openusage-windows/actions/workflows/windows.yml) offers two
 downloads:
 
-- **`QuotaTray-windows-setup`** — the installer (`QuotaTray-Setup-<version>-x64.exe`). It installs for
-  your Windows account only, so it needs no administrator rights, into
-  `%LOCALAPPDATA%\Programs\QuotaTray`. It adds Quota Tray to the Start menu, can start it when you sign
-  in (checked by default), and can add a desktop shortcut. Run a newer installer to update; it closes a
-  running copy first. Uninstall from **Settings → Apps**; your settings and caches stay, so a reinstall
-  picks up where you left off.
+- **`QuotaTray-windows-setup`** — the installer (`QuotaTray-Setup-x64.exe`). It installs for your
+  Windows account only, so it needs no administrator rights, into `%LOCALAPPDATA%\Programs\QuotaTray`.
+  It adds Quota Tray to the Start menu, starts it when you sign in (checked by default), and can add a
+  desktop shortcut. Run a newer installer to update; it closes a running copy first. Uninstall from
+  **Settings → Apps**; your settings and caches stay, so a reinstall picks up where you left off.
 - **`QuotaTray-windows-x64`** — the same app as a portable folder. Unzip it anywhere and run
-  `QuotaTray.exe`; to update, quit Quota Tray and replace the folder.
+  `QuotaTray.exe`; to update, quit Quota Tray and replace the folder. Its first launch also turns on
+  Launch at Login; switch it off in Settings if you'd rather start it yourself.
+
+`windows/installer/install.ps1` and `uninstall.ps1` run the same installer from PowerShell. They download
+it from the fork's latest GitHub release, so the paste-in commands below work once a release with those
+files is published:
+
+```powershell
+# Install or update
+irm https://github.com/burguela/openusage-windows/releases/latest/download/install.ps1 | iex
+# Uninstall (settings and logs stay; set $env:QUOTATRAY_PURGE = 1 first to remove them too)
+irm https://github.com/burguela/openusage-windows/releases/latest/download/uninstall.ps1 | iex
+```
+
+With a downloaded installer, `$env:QUOTATRAY_SETUP = 'C:\path\QuotaTray-Setup-x64.exe'` makes
+`install.ps1` use it instead of downloading.
 
 Neither is code-signed yet, so SmartScreen may warn the first time; choose **More info → Run anyway**.
 
@@ -100,14 +129,14 @@ credentials on Windows, so Credential Manager is only a fallback.
 | Logs | `%LOCALAPPDATA%\QuotaTray\Logs\` (`Engine.log` from the engine, `QuotaTray.log` from the tray app) |
 | Spend-history parse cache, pricing cache | `%LOCALAPPDATA%\QuotaTray\` |
 | Launch at Login | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, value `QuotaTray` |
-| Show Total Spend, the selected spend period | `HKCU\Software\QuotaTray` |
+| Show Total Spend, the selected spend period, Icon Style, which icons were shown on the taskbar | `HKCU\Software\QuotaTray` |
 
 Deleting that preferences file resets Quota Tray to a first run.
 
 ## What isn't on Windows yet
 
 These OpenUsage Mac features are not part of Quota Tray: Customize (reordering, hiding, and pinning metrics;
-Windows uses the default layout), notifications, the global shortcut, the local HTTP API, iCloud Sync,
+Windows uses the default layout and its default pins), notifications, the global shortcut, the local HTTP API, iCloud Sync,
 share cards, the Cost/MTok and Tokens views of Total Spend, and automatic updates. Install a new version by replacing the app folder.
 
 ## How it's built
@@ -127,7 +156,8 @@ and `sqlite3.exe`, which Cursor, Devin, OpenCode, and Claude Desktop need to rea
 The `Windows` GitHub Actions workflow (`.github/workflows/windows.yml`) builds everything on
 `windows-latest`, uploads the folder as the `QuotaTray-windows-x64` artifact, then builds the installer
 from that folder with [Inno Setup](https://jrsoftware.org/isinfo.php) (`windows/installer/QuotaTray.iss`),
-checks that it installs and uninstalls cleanly, and uploads it as `QuotaTray-windows-setup`. To build
+checks that it installs and uninstalls cleanly through `install.ps1` and `uninstall.ps1`, and uploads it
+as `QuotaTray-windows-setup`. To build
 locally:
 
 ```powershell
@@ -143,7 +173,7 @@ iscc /DAppVersion=0.7.0 /DAppDir=$PWD\dist\QuotaTray /DOutputDir=$PWD\dist\insta
 
 While developing the tray app, set `QUOTATRAY_ENGINE` to a built `openusage-cli.exe` to use an engine
 from another folder. `QuotaTray.exe --render-preview <dashboard.json> <folder>` renders the panel (light and
-dark: dashboard, Settings, and the taskbar icon with its hover text) to PNGs from a saved dashboard document; CI does this with
+dark: dashboard, Settings, and the taskbar icons with one icon's hover text) to PNGs from a saved dashboard document; CI does this with
 `windows/QuotaTray/Preview/sample-dashboard.json` and uploads the `QuotaTray-windows-screenshots`
 artifact. `windows/scripts/generate_assets.py` regenerates the tray app's icon (Quota Tray's own
 two-meter icon; the OpenUsage logo is the original project's trademark and isn't used) and provider

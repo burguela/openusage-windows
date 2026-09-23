@@ -82,6 +82,7 @@ public static class PreviewRenderer
         public void RefreshNow() { }
         public void SetProviderEnabled(string providerId, bool enabled) { }
         public void SetMeterStyle(bool showRemaining) { }
+        public void SetTrayStyle(TrayStyle style) { }
         public void SetLaunchAtLogin(bool enabled) { }
         public void OpenLogFolder() { }
         public void Quit() { }

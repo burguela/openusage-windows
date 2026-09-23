@@ -12,9 +12,10 @@ using Drawing = System.Drawing;
 namespace QuotaTray.Preview;
 
 /// <summary>
-/// Renders the notification-area end of the taskbar with Quota Tray's real icon (the same meters
-/// <see cref="TrayIconRenderer"/> draws) and its hover tooltip, so the previews show what sits in the
-/// taskbar. The taskbar around the icon is a simplified Windows 11 look.
+/// Renders the notification-area end of the taskbar with Quota Tray's real icons (the same readings
+/// <see cref="TrayIconRenderer"/> draws in the default Text style) and one icon's hover tooltip, so
+/// the previews show what sits in the taskbar. The taskbar around the icons is a simplified Windows 11
+/// look.
 /// </summary>
 internal static class TrayPreview
 {
@@ -23,6 +24,13 @@ internal static class TrayPreview
 
     public static void Save(Dashboard dashboard, bool dark, string path)
     {
+        var readings = TrayIconRenderer.Readings(dashboard);
+        if (readings.Count == 0)
+        {
+            throw new InvalidOperationException("The preview dashboard has no pinned readings to draw.");
+        }
+        // The tooltip belongs to the icon under the pointer: the last one, nearest the clock.
+        var hovered = readings.Count - 1;
         var taskbarFill = dark ? Color.FromRgb(0x20, 0x20, 0x20) : Color.FromRgb(0xF3, 0xF3, 0xF3);
         var text = dark ? Colors.White : Color.FromRgb(0x1B, 0x1B, 0x1B);
         var hover = dark ? Color.FromArgb(0x26, 0xFF, 0xFF, 0xFF) : Color.FromArgb(0x14, 0x00, 0x00, 0x00);
@@ -48,7 +56,7 @@ internal static class TrayPreview
             HorizontalAlignment = HorizontalAlignment.Right,
             Child = new TextBlock
             {
-                Text = TrayController.Tooltip(dashboard, error: null),
+                Text = TrayIconSet.ReadingTooltip(readings[hovered], error: null),
                 Foreground = new SolidColorBrush(text),
                 FontSize = 12,
             },
@@ -65,24 +73,28 @@ internal static class TrayPreview
         DockPanel.SetDock(clock, Dock.Right);
         taskbar.Children.Add(clock);
 
-        var meters = TrayIconRenderer.IconMeters(dashboard);
-        var icon = new Border
+        // Docked right to left, so the last reading sits next to the clock.
+        for (var i = readings.Count - 1; i >= 0; i--)
         {
-            Width = 32,
-            Height = 40,
-            CornerRadius = new CornerRadius(4),
-            Background = new SolidColorBrush(hover),
-            VerticalAlignment = VerticalAlignment.Center,
-            Child = new Image
+            var icon = new Border
             {
-                // Drawn at 2x so the 16-pixel icon stays sharp in the 2x preview.
-                Source = ToBitmapSource(TrayIconRenderer.DrawMetersBitmap(meters, new Drawing.Size(32, 32), !dark)),
-                Width = 16,
-                Height = 16,
-            },
-        };
-        DockPanel.SetDock(icon, Dock.Right);
-        taskbar.Children.Add(icon);
+                Width = 28,
+                Height = 40,
+                CornerRadius = new CornerRadius(4),
+                Background = i == hovered ? new SolidColorBrush(hover) : Brushes.Transparent,
+                VerticalAlignment = VerticalAlignment.Center,
+                Child = new Image
+                {
+                    // Drawn at 2x so the 16-pixel icon stays sharp in the 2x preview.
+                    Source = ToBitmapSource(TrayIconRenderer.DrawReadingBitmap(
+                        readings[i].Row, readings[i].Number, new Drawing.Size(32, 32), !dark)),
+                    Width = 16,
+                    Height = 16,
+                },
+            };
+            DockPanel.SetDock(icon, Dock.Right);
+            taskbar.Children.Add(icon);
+        }
 
         var overflow = new Shapes.Path
         {
@@ -91,7 +103,7 @@ internal static class TrayPreview
             StrokeThickness = 1.2,
             Width = 10,
             Height = 6,
-            Margin = new Thickness(0, 0, 12, 0),
+            Margin = new Thickness(0, 0, 10, 0),
             VerticalAlignment = VerticalAlignment.Center,
         };
         DockPanel.SetDock(overflow, Dock.Right);

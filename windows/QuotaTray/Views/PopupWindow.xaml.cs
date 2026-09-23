@@ -17,6 +17,7 @@ public interface IPopupActions
     void RefreshNow();
     void SetProviderEnabled(string providerId, bool enabled);
     void SetMeterStyle(bool showRemaining);
+    void SetTrayStyle(TrayStyle style);
     void SetLaunchAtLogin(bool enabled);
     void OpenLogFolder();
     void Quit();

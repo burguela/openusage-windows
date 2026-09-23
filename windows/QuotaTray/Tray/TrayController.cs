@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using QuotaTray.Engine;
@@ -18,8 +17,6 @@ namespace QuotaTray.Tray;
 /// </summary>
 public sealed class TrayController : IPopupActions, IDisposable
 {
-    // NotifyIcon.Text throws above 127 characters.
-    private const int TooltipLimit = 127;
     private static readonly TimeSpan TickInterval = TimeSpan.FromMinutes(1);
     // While the panel is closed, check for stale providers every five minutes (the engine's
     // refresh interval); while it is open, every minute so countdowns stay current.
@@ -27,8 +24,7 @@ public sealed class TrayController : IPopupActions, IDisposable
 
     private readonly App _app;
     private readonly EngineClient _engine;
-    private readonly Forms.NotifyIcon _notifyIcon;
-    private readonly TrayIconRenderer _iconRenderer;
+    private readonly TrayIconSet _icons;
     private readonly PopupWindow _popup;
     private readonly DispatcherTimer _timer;
     private readonly Forms.ToolStripMenuItem _launchAtLoginItem;
@@ -45,7 +41,6 @@ public sealed class TrayController : IPopupActions, IDisposable
         _engine = EngineClient.Locate();
         AppLog.Info($"engine: {_engine.ExecutablePath}");
 
-        _iconRenderer = new TrayIconRenderer();
         _popup = new PopupWindow(this);
 
         _launchAtLoginItem = new Forms.ToolStripMenuItem("Launch at Login", null, (_, _) =>
@@ -63,13 +58,7 @@ public sealed class TrayController : IPopupActions, IDisposable
         menu.Items.Add(new Forms.ToolStripMenuItem("Quit Quota Tray", null, (_, _) => Quit()));
         menu.Opening += (_, _) => _launchAtLoginItem.Checked = SafeLaunchAtLoginState();
 
-        _notifyIcon = new Forms.NotifyIcon
-        {
-            Icon = _iconRenderer.AppIcon,
-            Text = "Quota Tray",
-            ContextMenuStrip = menu,
-        };
-        _notifyIcon.MouseClick += OnIconClick;
+        _icons = new TrayIconSet(menu, OnIconClick);
 
         _timer = new DispatcherTimer { Interval = TickInterval };
         _timer.Tick += (_, _) => OnTick();
@@ -77,7 +66,7 @@ public sealed class TrayController : IPopupActions, IDisposable
 
     public void Start()
     {
-        _notifyIcon.Visible = true;
+        _icons.Show();
         _timer.Start();
         _ = StartupLoadAsync();
     }
@@ -92,6 +81,8 @@ public sealed class TrayController : IPopupActions, IDisposable
     private void OnTick()
     {
         _ticksSinceRefresh++;
+        // Windows lists a new icon a moment after it appears; catch it on the next tick.
+        TrayPromotion.PromoteNewIcons();
         if (_refreshing)
         {
             return;
@@ -175,32 +166,10 @@ public sealed class TrayController : IPopupActions, IDisposable
         }
         _engineError = error;
         _popup.Update(dashboard, error, _refreshing);
-        _notifyIcon.Icon = _iconRenderer.Render(_dashboard);
-        _notifyIcon.Text = Tooltip(_dashboard, error);
+        UpdateIcons();
     }
 
-    /// <summary>"Quota Tray" plus the pinned readings, e.g. "Claude: Session 58% · Weekly 40%".</summary>
-    internal static string Tooltip(Dashboard? dashboard, string? error)
-    {
-        var text = new StringBuilder("Quota Tray");
-        if (error != null)
-        {
-            text.Append("\nCouldn't Refresh");
-        }
-        foreach (var provider in dashboard?.Providers.Where(p => p.Enabled) ?? Enumerable.Empty<ProviderInfo>())
-        {
-            var readings = provider.Rows
-                .Where(r => r.Pinned && r.HasData && r.CompactValue.Length > 0)
-                .Select(r => $"{r.Title} {r.CompactValue}")
-                .ToList();
-            if (readings.Count > 0)
-            {
-                text.Append('\n').Append(provider.DisplayName).Append(": ").Append(string.Join(" · ", readings));
-            }
-        }
-        var value = text.ToString();
-        return value.Length <= TooltipLimit ? value : value[..(TooltipLimit - 1)] + "…";
-    }
+    private void UpdateIcons() => _icons.Update(_dashboard, _engineError, UiSettings.TrayStyle);
 
     // MARK: - IPopupActions
 
@@ -225,6 +194,13 @@ public sealed class TrayController : IPopupActions, IDisposable
     public void SetMeterStyle(bool showRemaining)
     {
         _ = RunCommandAsync("meter style", () => _engine.SetMeterStyleAsync(showRemaining));
+    }
+
+    public void SetTrayStyle(TrayStyle style)
+    {
+        UiSettings.TrayStyle = style;
+        UpdateIcons();
+        _popup.Update(null, _engineError, _refreshing);
     }
 
     public void SetLaunchAtLogin(bool enabled)
@@ -268,15 +244,15 @@ public sealed class TrayController : IPopupActions, IDisposable
     {
         Theme.Reload();
         _popup.ApplyTheme();
-        // The mini meters follow the taskbar's own light/dark setting.
-        _notifyIcon.Icon = _iconRenderer.Render(_dashboard);
+        // The icons follow the taskbar's own light/dark setting.
+        UpdateIcons();
     }
 
     public void ShowError(string message)
     {
         if (!_disposed)
         {
-            _notifyIcon.ShowBalloonTip(5000, "Quota Tray", message, Forms.ToolTipIcon.Warning);
+            _icons.ShowBalloon(message);
         }
     }
 
@@ -301,9 +277,7 @@ public sealed class TrayController : IPopupActions, IDisposable
         }
         _disposed = true;
         _timer.Stop();
-        _notifyIcon.Visible = false;
-        _notifyIcon.Dispose();
-        _iconRenderer.Dispose();
+        _icons.Dispose();
         _popup.Close();
     }
 }

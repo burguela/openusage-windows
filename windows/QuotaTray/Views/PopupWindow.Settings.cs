@@ -28,6 +28,16 @@ public partial class PopupWindow
         }));
         display.Children.Add(SettingsRow("Show Usage As", picker, theme));
 
+        // The Mac's Icon Style: numbers in the taskbar, or one icon of mini meters.
+        var style = UiSettings.TrayStyle;
+        FrameworkElement? stylePicker = null;
+        stylePicker = PickerButton(style == TrayStyle.Bars ? "Bars" : "Text", theme, () => ShowMenu(stylePicker!, above: false, new MenuItemSpec[]
+        {
+            new("Text", () => _actions.SetTrayStyle(TrayStyle.Text), IsChecked: style == TrayStyle.Text),
+            new("Bars", () => _actions.SetTrayStyle(TrayStyle.Bars), IsChecked: style == TrayStyle.Bars),
+        }));
+        display.Children.Add(SettingsRow("Icon Style", stylePicker, theme));
+
         var providers = Section("Providers", theme, body);
         if (_dashboard == null)
         {
