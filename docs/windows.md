@@ -1,5 +1,10 @@
 # Windows
 
+> The Windows app is part of [openusage-windows](https://github.com/burguela/openusage-windows), an
+> unofficial fork of [OpenUsage](https://github.com/robinebers/openusage) by Robin Ebers. It is not an
+> official OpenUsage release, and the original maintainers don't support it; report Windows problems in
+> the fork's [issues](https://github.com/burguela/openusage-windows/issues).
+
 OpenUsage runs on Windows 10 and 11 as a notification-area (tray) app. It tracks the same providers,
 reads the same local credentials, and shows the same numbers as the Mac app, because both use one
 shared engine.
@@ -26,6 +31,22 @@ The tray icon draws two small meters for the first two pinned rows that have dat
 and Weekly by default), in yellow or red when a limit is close. Hovering it lists every pinned reading.
 Windows may place a new tray icon in the overflow (the `^` arrow); drag it onto the taskbar to keep it
 visible.
+
+<p align="center">
+  <img src="screenshots/windows-dashboard-light.png" alt="The Windows panel in light mode" width="260">
+  &nbsp;
+  <img src="screenshots/windows-dashboard-dark.png" alt="The Windows panel in dark mode" width="260">
+  &nbsp;
+  <img src="screenshots/windows-settings-light.png" alt="Settings on Windows" width="260">
+</p>
+
+## Installing
+
+There are no signed releases yet. Download the `OpenUsage-windows-x64` artifact from the latest successful
+run of the fork's [Windows workflow](https://github.com/burguela/openusage-windows/actions/workflows/windows.yml),
+unzip it anywhere (for example `%LOCALAPPDATA%\Programs\OpenUsage`), and run `OpenUsage.exe`. The build
+isn't code-signed, so SmartScreen may warn the first time; choose **More info → Run anyway**. To update,
+quit OpenUsage and replace the folder; settings and caches live elsewhere and are kept.
 
 ## First run and refreshing
 

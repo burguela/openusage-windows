@@ -1,5 +1,10 @@
 # OpenUsage Documentation
 
+> This is the documentation of [openusage-windows](https://github.com/burguela/openusage-windows), an
+> unofficial fork of [OpenUsage](https://github.com/robinebers/openusage) by Robin Ebers that adds a
+> Windows app. Everything except the [Windows](windows.md) page comes from the original project and
+> describes the macOS app, unless a page says otherwise.
+
 What the app does and how it behaves. These pages describe **behavior, not visuals**, and they are updated together with any change to that behavior — if the app and a page here disagree, that's a bug.
 
 ## The app
