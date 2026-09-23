@@ -159,9 +159,7 @@ final class WidgetDataStore {
         self.providerRefreshTimeout = providerRefreshTimeout
         self.notificationSettings = notificationSettings
         self.postNotification = postNotification
-            ?? { idPrefix, title, subtitle, body in
-                await AppNotifications.shared.post(idPrefix: idPrefix, title: title, subtitle: subtitle, body: body)
-            }
+            ?? Self.systemNotificationPoster
         self.providerIdentityKeys = providerIdentityKeys
         self.meterStyle = defaults.enumValue(forKey: Self.meterStyleKey, default: .remaining)
         self.resetDisplayMode = defaults.enumValue(forKey: Self.resetDisplayModeKey, default: .relative)
@@ -665,4 +663,18 @@ final class WidgetDataStore {
         }
     }
 
+}
+
+extension WidgetDataStore {
+    /// Delivers quota milestones through the macOS notification center. Off macOS the engine has no
+    /// notification surface of its own (the Windows tray app raises its own toasts), so nothing is
+    /// delivered and the milestone stays un-marked.
+    static let systemNotificationPoster: @MainActor (String, String, String, String) async -> Bool = {
+        idPrefix, title, subtitle, body in
+        #if os(macOS)
+        await AppNotifications.shared.post(idPrefix: idPrefix, title: title, subtitle: subtitle, body: body)
+        #else
+        false
+        #endif
+    }
 }

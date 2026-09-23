@@ -13,7 +13,13 @@ extension Bundle {
     /// This accessor looks where the resource bundle actually ships first, and only falls back to
     /// `Bundle.module` for `swift run` / `swift test`, where the build path is valid.
     static let openUsageResources: Bundle = {
+        // SwiftPM names the copied-resources folder `.bundle` on Apple platforms and `.resources`
+        // elsewhere; the Windows build ships it beside `openusage.exe`.
+        #if canImport(Darwin)
         let bundleName = "OpenUsage_OpenUsage.bundle"
+        #else
+        let bundleName = "OpenUsage_OpenUsage.resources"
+        #endif
         let containingAppResources = Bundle.main.executableURL
             .flatMap(ContainingAppBundle.url(for:))?
             .appendingPathComponent("Contents/Resources", isDirectory: true)

@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 struct OpenRouterUsageClient: Sendable {
     static let creditsURL = "https://openrouter.ai/api/v1/credits"

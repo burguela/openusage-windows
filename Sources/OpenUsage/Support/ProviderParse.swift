@@ -21,9 +21,18 @@ enum ProviderParse {
     /// Permissive numeric read: accepts JSON numbers and numeric strings, rejecting booleans and
     /// non-finite values. `JSONSerialization` bridges booleans through `NSNumber`, so the Core
     /// Foundation type check is required to keep `true`/`false` from becoming `1`/`0`.
+    private static func isBoolean(_ number: NSNumber) -> Bool {
+        #if canImport(Darwin)
+        CFGetTypeID(number) == CFBooleanGetTypeID()
+        #else
+        // swift-corelibs-foundation has no public CFBoolean; its JSON booleans report objCType "c".
+        String(cString: number.objCType) == "c"
+        #endif
+    }
+
     static func number(_ value: Any?) -> Double? {
         if let number = value as? NSNumber {
-            guard CFGetTypeID(number) != CFBooleanGetTypeID() else { return nil }
+            guard !isBoolean(number) else { return nil }
             let doubleValue = number.doubleValue
             return doubleValue.isFinite ? doubleValue : nil
         }

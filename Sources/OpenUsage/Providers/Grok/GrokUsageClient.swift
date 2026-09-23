@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 struct GrokRefreshResponse: Decodable, Hashable, Sendable {
     var accessToken: String

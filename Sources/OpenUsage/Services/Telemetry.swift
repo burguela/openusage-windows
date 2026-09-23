@@ -26,16 +26,6 @@ enum TelemetryConfig {
     static let host = "https://us.i.posthog.com"
 }
 
-/// The transport seam telemetry is emitted through. Abstracted from PostHog so the recorder's
-/// daily-rollup/dedup logic can be unit-tested against a fake sink.
-@MainActor
-protocol TelemetrySink: AnyObject {
-    func capture(_ event: String, _ properties: [String: Any])
-    /// Mirror the optional-analytics preference without disabling daily activity or crash reporting.
-    func setOptionalAnalyticsEnabled(_ enabled: Bool)
-    func flush()
-}
-
 /// Anonymous PostHog sink. The transport and crash autocapture always stay enabled; optional
 /// provider events are gated in `TelemetryRecorder`. No `identify()`/`group()`/`alias()`,
 /// `personProfiles = .never`, and only IDs/counts/enums are ever sent — never free-form error messages.

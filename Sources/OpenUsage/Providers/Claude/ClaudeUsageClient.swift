@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 struct ClaudeRefreshResponse: Decodable, Hashable, Sendable {
     var accessToken: String

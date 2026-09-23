@@ -1,5 +1,11 @@
 import Foundation
+#if canImport(Darwin)
 import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#endif
 
 struct ProcessResult: Sendable, Equatable {
     var exitCode: Int32
@@ -26,6 +32,15 @@ struct SystemProcessRunner: ProcessRunning {
         timeout: TimeInterval
     ) throws -> ProcessResult {
         let process = Process()
+        #if os(Windows)
+        // Windows has no `/usr/bin/env`: resolve a bare name ourselves (next to the running
+        // executable, then `PATH` with `PATHEXT`), so bundled helpers like `sqlite3.exe` win.
+        guard let resolved = Platform.findExecutable(executable) else {
+            throw ProcessRunnerError.executableNotFound(executable)
+        }
+        process.executableURL = resolved
+        process.arguments = arguments
+        #else
         if executable.hasPrefix("/") {
             process.executableURL = URL(fileURLWithPath: executable)
             process.arguments = arguments
@@ -33,6 +48,7 @@ struct SystemProcessRunner: ProcessRunning {
             process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             process.arguments = [executable] + arguments
         }
+        #endif
         if !environment.isEmpty {
             process.environment = ProcessInfo.processInfo.environment.merging(environment) { _, new in new }
         }
@@ -67,9 +83,11 @@ struct SystemProcessRunner: ProcessRunning {
             terminateProcessTree(rootPID: process.processIdentifier)
             process.terminate()
             _ = exited.wait(timeout: .now() + 0.1)
+            #if !os(Windows)
             if process.isRunning {
                 kill(process.processIdentifier, SIGKILL)
             }
+            #endif
             process.waitUntilExit()
             drained.wait() // the killed child closed its pipes, so the drains hit EOF and finish
             throw ProcessRunnerError.timedOut(executable: executable, timeout: timeout)
@@ -95,6 +113,18 @@ struct SystemProcessRunner: ProcessRunning {
     }
 
     private func terminateProcessTree(rootPID: Int32) {
+        #if os(Windows)
+        // `taskkill /T /F` ends the child and everything it spawned — Windows' equivalent of the
+        // recursive SIGTERM/SIGKILL walk below.
+        let taskkill = Process()
+        let systemRoot = ProcessInfo.processInfo.environment["SystemRoot"] ?? "C:\\Windows"
+        taskkill.executableURL = URL(fileURLWithPath: systemRoot).appendingPathComponent("System32/taskkill.exe")
+        taskkill.arguments = ["/PID", String(rootPID), "/T", "/F"]
+        taskkill.standardOutput = Pipe()
+        taskkill.standardError = Pipe()
+        try? taskkill.run()
+        taskkill.waitUntilExit()
+        #else
         let children = childPIDs(of: rootPID)
         for child in children {
             terminateProcessTree(rootPID: child)
@@ -103,8 +133,10 @@ struct SystemProcessRunner: ProcessRunning {
         for child in children {
             kill(child, SIGKILL)
         }
+        #endif
     }
 
+    #if !os(Windows)
     private func childPIDs(of pid: Int32) -> [Int32] {
         let pgrep = Process()
         pgrep.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
@@ -124,13 +156,17 @@ struct SystemProcessRunner: ProcessRunning {
             .split(whereSeparator: \.isNewline)
             .compactMap { Int32($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
     }
+    #endif
 }
 
 enum ProcessRunnerError: Error, LocalizedError, Equatable {
     case timedOut(executable: String, timeout: TimeInterval)
+    case executableNotFound(String)
 
     var errorDescription: String? {
         switch self {
+        case .executableNotFound(let executable):
+            return "\(executable) was not found next to OpenUsage or on PATH."
         case .timedOut(let executable, let timeout):
             return "\(executable) timed out after \(Int(timeout))s."
         }

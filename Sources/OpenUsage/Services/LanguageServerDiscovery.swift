@@ -30,12 +30,7 @@ struct LanguageServerDiscovery: Sendable {
     var processRunner: ProcessRunning = SystemProcessRunner()
 
     func discover(_ options: Options) -> Result? {
-        guard let psOutput = try? processRunner.run(
-            executable: "/bin/ps",
-            arguments: ["-ax", "-o", "pid=,command="],
-            environment: [:],
-            timeout: 5
-        ), psOutput.succeeded else {
+        guard let psOutput = try? listProcesses(), psOutput.succeeded else {
             AppLog.warn(.subprocess, "ls discover: ps failed for \(options.processName)")
             return nil
         }
@@ -45,8 +40,6 @@ struct LanguageServerDiscovery: Sendable {
             AppLog.info(.subprocess, "ls discover: \(options.processName) process not found")
             return nil
         }
-
-        let lsofPath = ["/usr/sbin/lsof", "/usr/bin/lsof"].first { FileManager.default.fileExists(atPath: $0) }
 
         for candidate in candidates {
             let csrf: String
@@ -63,12 +56,7 @@ struct LanguageServerDiscovery: Sendable {
                 .flatMap { Int($0) }
 
             var ports: [Int] = []
-            if let lsofPath, let result = try? processRunner.run(
-                executable: lsofPath,
-                arguments: ["-nP", "-iTCP", "-sTCP:LISTEN", "-a", "-p", String(candidate.pid)],
-                environment: [:],
-                timeout: 5
-            ), result.succeeded {
+            if let result = try? listListeningPorts(pid: candidate.pid), result.succeeded {
                 ports = Self.parseListeningPorts(result.stdout)
             }
 
@@ -81,6 +69,58 @@ struct LanguageServerDiscovery: Sendable {
         }
 
         return nil
+    }
+
+    // MARK: - Process and socket listing
+
+    /// `pid command` lines for every process. macOS/Linux: `ps`. Windows: PowerShell over
+    /// `Win32_Process`, printed in the same `pid command` shape so the parser stays shared.
+    private func listProcesses() throws -> ProcessResult {
+        #if os(Windows)
+        return try processRunner.run(
+            executable: "powershell",
+            arguments: [
+                "-NoProfile", "-NonInteractive", "-Command",
+                "Get-CimInstance Win32_Process | ForEach-Object { \"$($_.ProcessId) $($_.CommandLine)\" }"
+            ],
+            environment: [:],
+            timeout: 10
+        )
+        #else
+        return try processRunner.run(
+            executable: "/bin/ps",
+            arguments: ["-ax", "-o", "pid=,command="],
+            environment: [:],
+            timeout: 5
+        )
+        #endif
+    }
+
+    /// Listening TCP sockets of `pid`, in a shape `parseListeningPorts` reads (`… host:port (LISTEN)`).
+    /// macOS/Linux: `lsof`. Windows: `Get-NetTCPConnection`, printed in the same shape.
+    private func listListeningPorts(pid: Int32) throws -> ProcessResult? {
+        #if os(Windows)
+        return try processRunner.run(
+            executable: "powershell",
+            arguments: [
+                "-NoProfile", "-NonInteractive", "-Command",
+                "Get-NetTCPConnection -State Listen -OwningProcess \(pid) -ErrorAction SilentlyContinue | "
+                    + "ForEach-Object { \"TCP $($_.LocalAddress):$($_.LocalPort) (LISTEN)\" }"
+            ],
+            environment: [:],
+            timeout: 10
+        )
+        #else
+        guard let lsofPath = ["/usr/sbin/lsof", "/usr/bin/lsof"].first(where: {
+            FileManager.default.fileExists(atPath: $0)
+        }) else { return nil }
+        return try processRunner.run(
+            executable: lsofPath,
+            arguments: ["-nP", "-iTCP", "-sTCP:LISTEN", "-a", "-p", String(pid)],
+            environment: [:],
+            timeout: 5
+        )
+        #endif
     }
 
     // MARK: - Pure helpers (port of the Rust host logic; unit-tested directly)
@@ -143,7 +183,7 @@ struct LanguageServerDiscovery: Sendable {
             return matches ? 0 : nil
         }
 
-        let commandLower = command.lowercased()
+        let commandLower = Self.normalizedSeparators(command.lowercased())
         let matches = markersLower.contains { commandLower.contains("/\($0)/") }
         return matches ? 1 : nil
     }
@@ -164,16 +204,22 @@ struct LanguageServerDiscovery: Sendable {
     static func commandMatchesProcess(command: String, processNameLower: String) -> Bool {
         guard !processNameLower.isEmpty else { return false }
 
-        let exeName = (argv0(command: command) as NSString).lastPathComponent.lowercased()
+        var exeName = (normalizedSeparators(argv0(command: command)) as NSString).lastPathComponent.lowercased()
+        if exeName.hasSuffix(".exe") { exeName.removeLast(4) }
         if exeName == processNameLower { return true }
 
-        let commandLower = command.lowercased()
+        let commandLower = normalizedSeparators(command.lowercased()).replacingOccurrences(of: ".exe", with: "")
         if processNameLower.count >= 8 {
             return exeName.hasPrefix("\(processNameLower)_") || commandLower.contains(processNameLower)
         }
         return commandLower.hasSuffix("/\(processNameLower)")
             || commandLower.contains("/\(processNameLower) ")
             || commandLower.contains("/\(processNameLower)\t")
+    }
+
+    /// Windows command lines use `\` path separators; matching is written against `/`.
+    static func normalizedSeparators(_ text: String) -> String {
+        text.replacingOccurrences(of: "\\", with: "/")
     }
 
     /// Parse listening port numbers from `lsof -nP -iTCP -sTCP:LISTEN` output (deduped, ascending).

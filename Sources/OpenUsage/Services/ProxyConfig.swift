@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(Network)
 import Network
+#endif
 
 /// Optional proxy routing for provider HTTP requests — the same contract as the original app
 /// (docs/proxy.md): `~/.openusage/config.json` containing
@@ -63,6 +65,7 @@ struct ProxyConfig: Equatable, Sendable {
         )
     }
 
+    #if canImport(Network)
     /// The Network-framework proxy this config describes, with loopback always excluded.
     func proxyConfiguration() -> ProxyConfiguration {
         let endpoint = NWEndpoint.hostPort(host: .init(host), port: .init(rawValue: port)!)
@@ -81,4 +84,29 @@ struct ProxyConfig: Equatable, Sendable {
         configuration.excludedDomains = ["localhost", "127.0.0.1", "::1"]
         return configuration
     }
+    #else
+    /// The proxy as a libcurl-style URL. Off Apple platforms `URLSession` runs on libcurl, which reads
+    /// `ALL_PROXY` / `NO_PROXY` from the environment — `socks5h` so DNS also goes through a SOCKS
+    /// proxy, like the Network framework does on macOS.
+    var environmentURL: String {
+        let schemeName = scheme == .socks5 ? "socks5h" : scheme.rawValue
+        var credentials = ""
+        if let username {
+            let allowed = CharacterSet.urlUserAllowed
+            credentials = username.addingPercentEncoding(withAllowedCharacters: allowed) ?? username
+            if let password {
+                credentials += ":" + (password.addingPercentEncoding(withAllowedCharacters: .urlPasswordAllowed) ?? password)
+            }
+            credentials += "@"
+        }
+        let hostPart = host.contains(":") ? "[\(host)]" : host
+        return "\(schemeName)://\(credentials)\(hostPart):\(port)"
+    }
+
+    /// Route this process's `URLSession` traffic through the proxy, loopback excluded.
+    func applyToProcessEnvironment() {
+        Platform.setEnvironmentVariable("ALL_PROXY", environmentURL)
+        Platform.setEnvironmentVariable("NO_PROXY", "localhost,127.0.0.1,::1")
+    }
+    #endif
 }

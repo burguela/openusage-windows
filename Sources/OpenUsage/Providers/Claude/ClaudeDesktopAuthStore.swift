@@ -1,8 +1,16 @@
-import CommonCrypto
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 import Foundation
+#if os(macOS)
+import CommonCrypto
 import LocalAuthentication
 import Security
+#elseif os(Windows)
+import WinSDK
+#endif
 
 enum ClaudeDesktopCredentialStatus: Sendable, Equatable {
     case notChecked
@@ -23,6 +31,7 @@ protocol ClaudeDesktopSafeStorageKeyReading: Sendable {
     func readPassword(allowInteraction: Bool) throws -> String?
 }
 
+#if os(macOS)
 struct ClaudeDesktopSafeStorageKeyReader: ClaudeDesktopSafeStorageKeyReading {
     private static let service = "Claude Safe Storage"
     private static let account = "Claude Key"
@@ -61,6 +70,7 @@ struct ClaudeDesktopSafeStorageKeyReader: ClaudeDesktopSafeStorageKeyReading {
         }
     }
 }
+#endif
 
 enum ClaudeDesktopCredentialError: Error, Sendable {
     case permissionRequired
@@ -76,10 +86,16 @@ enum ClaudeDesktopCredentialError: Error, Sendable {
 /// tokens, so using one here would invalidate Claude Desktop's copy. OpenUsage only borrows a currently
 /// valid access token and waits for Desktop to renew it.
 struct ClaudeDesktopAuthStore: Sendable {
-    private static let configRelativePath = "Library/Application Support/Claude/config.json"
+    /// Electron's `userData` folder for Claude Desktop, relative to the home directory.
+    #if os(Windows)
+    static let userDataRelativePath = "AppData/Roaming/Claude"
+    #else
+    static let userDataRelativePath = "Library/Application Support/Claude"
+    #endif
+    private static let configRelativePath = "\(userDataRelativePath)/config.json"
     private static let cookieRelativePaths = [
-        "Library/Application Support/Claude/Cookies",
-        "Library/Application Support/Claude/Network/Cookies"
+        "\(userDataRelativePath)/Cookies",
+        "\(userDataRelativePath)/Network/Cookies"
     ]
     private static let cacheV1Key = "oauth:tokenCache"
     private static let cacheV2Key = "oauth:tokenCacheV2"
@@ -271,6 +287,7 @@ struct ClaudeDesktopAuthStore: Sendable {
         return object
     }
 
+    #if os(macOS)
     static func deriveKey(password: String) throws -> Data {
         let passwordData = Data(password.utf8)
         let salt = Data("saltysalt".utf8)
@@ -339,6 +356,40 @@ struct ClaudeDesktopAuthStore: Sendable {
         output.count = outputLength
         return output
     }
+    #else
+    /// Chromium's `os_crypt` on Windows: the "password" is the base64 AES-256 key the key reader
+    /// unwrapped from `Local State` with DPAPI (see `ClaudeDesktopSafeStorageKeyReader`).
+    static func deriveKey(password: String) throws -> Data {
+        guard let key = Data(base64Encoded: password), key.count == 32 else {
+            throw ClaudeDesktopCredentialError.invalidSafeStorageKey
+        }
+        return key
+    }
+
+    /// `v10` + 12-byte nonce + ciphertext + 16-byte GCM tag (AES-256-GCM), the format Chromium and
+    /// Electron's `safeStorage` write on Windows.
+    static func decrypt(_ encrypted: Data, key: Data) throws -> Data {
+        let nonceLength = 12
+        let tagLength = 16
+        guard encrypted.count > 3 + nonceLength + tagLength,
+              encrypted.prefix(3) == Data("v10".utf8),
+              key.count == 32
+        else {
+            throw ClaudeDesktopCredentialError.invalidCiphertext
+        }
+        let payload = Data(encrypted.dropFirst(3))
+        do {
+            let box = try AES.GCM.SealedBox(
+                nonce: AES.GCM.Nonce(data: payload.prefix(nonceLength)),
+                ciphertext: payload.dropFirst(nonceLength).dropLast(tagLength),
+                tag: payload.suffix(tagLength)
+            )
+            return try AES.GCM.open(box, using: SymmetricKey(data: key))
+        } catch {
+            throw ClaudeDesktopCredentialError.decryptionFailed(-1)
+        }
+    }
+    #endif
 
     private func path(_ relativePath: String) -> String {
         homeDirectory().appendingPathComponent(relativePath).path
@@ -378,3 +429,50 @@ private extension Data {
         self.init(bytes)
     }
 }
+
+#if !os(macOS)
+/// Off macOS, Claude Desktop's cookie and token-cache key lives in Electron's `Local State` file
+/// (`os_crypt.encrypted_key`), wrapped with Windows DPAPI for the current user. Returns the unwrapped
+/// AES-256 key as base64 — the store's `deriveKey` turns it back into bytes. Reading it needs no
+/// prompt, so `allowInteraction` is irrelevant here.
+struct ClaudeDesktopSafeStorageKeyReader: ClaudeDesktopSafeStorageKeyReading {
+    var homeDirectory: @Sendable () -> URL = { FileManager.default.homeDirectoryForCurrentUser }
+
+    func readPassword(allowInteraction: Bool) throws -> String? {
+        #if os(Windows)
+        let localState = homeDirectory()
+            .appendingPathComponent(ClaudeDesktopAuthStore.userDataRelativePath)
+            .appendingPathComponent("Local State")
+        guard let data = try? Data(contentsOf: localState) else { return nil }
+        guard let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let osCrypt = root["os_crypt"] as? [String: Any],
+              let encoded = osCrypt["encrypted_key"] as? String,
+              let wrapped = Data(base64Encoded: encoded),
+              wrapped.starts(with: Data("DPAPI".utf8))
+        else {
+            throw ClaudeDesktopCredentialError.invalidSafeStorageKey
+        }
+        let key = try Self.unprotect(Data(wrapped.dropFirst(5)))
+        return key.base64EncodedString()
+        #else
+        return nil
+        #endif
+    }
+
+    #if os(Windows)
+    private static func unprotect(_ data: Data) throws -> Data {
+        var input = Array(data)
+        return try input.withUnsafeMutableBufferPointer { buffer in
+            var blobIn = DATA_BLOB(cbData: DWORD(buffer.count), pbData: buffer.baseAddress)
+            var blobOut = DATA_BLOB()
+            guard CryptUnprotectData(&blobIn, nil, nil, nil, nil, 0, &blobOut) else {
+                throw ClaudeDesktopCredentialError.keychainFailure(Int(GetLastError()))
+            }
+            defer { LocalFree(blobOut.pbData) }
+            guard let bytes = blobOut.pbData else { throw ClaudeDesktopCredentialError.invalidSafeStorageKey }
+            return Data(bytes: bytes, count: Int(blobOut.cbData))
+        }
+    }
+    #endif
+}
+#endif

@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 struct HTTPRequest: Sendable {
     var method: String
@@ -41,7 +44,11 @@ struct URLSessionHTTPClient: HTTPClient {
     private static let session: URLSession = {
         let configuration = URLSessionConfiguration.default
         if let proxy = ProxyConfig.current {
+            #if canImport(Network)
             configuration.proxyConfigurations = [proxy.proxyConfiguration()]
+            #else
+            proxy.applyToProcessEnvironment()
+            #endif
             // Record that a proxy is in effect (useful in a support log). Scheme/host/port only —
             // any embedded `user:pass` lives in separate fields and is never logged.
             AppLog.info(.config, "proxy enabled \(proxy.scheme.rawValue)://\(proxy.host):\(proxy.port)")
@@ -52,7 +59,13 @@ struct URLSessionHTTPClient: HTTPClient {
     /// Loopback-only session: ephemeral (no shared cookie/cache state), no proxy (localhost), and a
     /// delegate that trusts a self-signed cert exclusively for `127.0.0.1`. Built once.
     private static let loopbackSession: URLSession = {
+        #if canImport(Security)
         URLSession(configuration: .ephemeral, delegate: LoopbackTLSDelegate(), delegateQueue: nil)
+        #else
+        // No `SecTrust` off Apple platforms, so a self-signed loopback cert can't be pinned here;
+        // callers fall back to the language server's plain-HTTP extension port.
+        URLSession(configuration: .ephemeral)
+        #endif
     }()
 
     func send(_ request: HTTPRequest) async throws -> HTTPResponse {
@@ -95,6 +108,7 @@ enum HTTPClientError: Error, LocalizedError {
 /// Accepts a self-signed server cert ONLY for loopback (`127.0.0.1`). Every other host — and every
 /// non-server-trust challenge — falls through to default validation, so this never weakens trust for a
 /// real remote endpoint. Holds no mutable state, so it is safe to share across the loopback session.
+#if canImport(Security)
 private final class LoopbackTLSDelegate: NSObject, URLSessionDelegate, @unchecked Sendable {
     func urlSession(
         _ session: URLSession,
@@ -111,4 +125,4 @@ private final class LoopbackTLSDelegate: NSObject, URLSessionDelegate, @unchecke
         completionHandler(.useCredential, URLCredential(trust: trust))
     }
 }
-
+#endif

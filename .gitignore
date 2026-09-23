@@ -29,3 +29,7 @@ node_modules/
 # Local appcast / Sparkle feed output
 feed/
 appcast.xml
+
+# Windows tray app build output
+windows/**/bin/
+windows/**/obj/

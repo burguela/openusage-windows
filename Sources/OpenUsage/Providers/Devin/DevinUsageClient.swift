@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 struct DevinUsageClient: Sendable {
     static let cloudService = "exa.seat_management_pb.SeatManagementService"

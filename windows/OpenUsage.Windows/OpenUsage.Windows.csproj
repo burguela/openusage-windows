@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    OpenUsage for Windows: a notification-area (tray) app. All provider logic lives in the shared
+    Swift engine (`openusage.exe`, built from this repository's `OpenUsageCLI` target); this app runs
+    it and renders the display-ready dashboard it prints. See docs/windows.md.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- NotifyIcon (the tray icon) and its context menu come from Windows Forms. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- Lets the project build (not run) on macOS/Linux too, e.g. for a quick compile check. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- WPF and Windows Forms share type names (Application, MessageBox); keep usings explicit. -->
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>OpenUsage</AssemblyName>
+    <RootNamespace>OpenUsage.Windows</RootNamespace>
+    <ApplicationIcon>Assets\OpenUsage.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Product>OpenUsage</Product>
+    <Company>OpenUsage</Company>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!--
+      WFAC010 asks Windows Forms apps to set DPI awareness in code instead of the manifest. This is a
+      WPF app (Windows Forms only supplies the tray icon), and WPF reads per-monitor awareness from
+      the manifest, so the manifest is the right place.
+    -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\OpenUsage.ico" LogicalName="OpenUsage.ico" />
+    <EmbeddedResource Include="Assets\provider-marks.json" LogicalName="provider-marks.json" />
+  </ItemGroup>
+
+</Project>

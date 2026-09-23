@@ -1,5 +1,12 @@
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// Signs a request the way the `ollama` CLI does, so ollama.com accepts it from OpenUsage exactly as it
 /// would from Ollama itself.

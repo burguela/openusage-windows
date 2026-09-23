@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(os)
 import os
+#endif
 
 /// Resolves the log file URL and owns a serial, lock-guarded `FileHandle` appender with single-archive
 /// rotation. `@unchecked Sendable` because all mutable state is guarded by an internal `NSLock`, so it
@@ -57,9 +59,14 @@ final class LogFile: @unchecked Sendable {
         // `.first` with a fallback rather than `[0]`: the lookup effectively always resolves on stock
         // macOS, but a force-index would crash the app at launch (this runs during `bootstrap()`) if it
         // ever returned empty in an unusual container. A non-ideal-but-valid directory keeps the app alive.
+        #if os(macOS)
         let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
         return library.appendingPathComponent("Logs/OpenUsage", isDirectory: true)
+        #else
+        // Windows: `%LOCALAPPDATA%\OpenUsage\Logs`, next to the rest of OpenUsage's local state.
+        return Platform.appDataDirectory.appendingPathComponent("OpenUsage/Logs", isDirectory: true)
+        #endif
     }
 
     /// Create the directory and file, seed the in-memory size from disk, and perform the launch-time

@@ -1,4 +1,4 @@
-import SwiftUI
+import Foundation
 @testable import OpenUsage
 
 /// Test fixtures: sample providers and the widgets they register (mirroring OpenUsage's real

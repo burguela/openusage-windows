@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// Calls OpenCode's official Go usage endpoint with the local `opencode-go` API key.
 struct OpenCodeUsageClient: Sendable {

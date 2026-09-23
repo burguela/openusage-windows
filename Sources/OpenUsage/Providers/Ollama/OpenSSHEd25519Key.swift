@@ -1,4 +1,8 @@
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 import Foundation
 
 /// Minimal reader for the unencrypted OpenSSH private-key container (`-----BEGIN OPENSSH PRIVATE KEY-----`),

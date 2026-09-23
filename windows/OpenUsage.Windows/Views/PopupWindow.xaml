@@ -1,0 +1,23 @@
+<Window x:Class="OpenUsage.Windows.Views.PopupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="OpenUsage"
+        Width="384"
+        SizeToContent="Height"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Topmost="True"
+        UseLayoutRounding="True"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        FontSize="13">
+    <!-- The margin leaves room for the drop shadow inside the transparent window. -->
+    <Border x:Name="Frame" Margin="12" CornerRadius="10" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="18" ShadowDepth="2" Opacity="0.28" />
+        </Border.Effect>
+        <DockPanel x:Name="Root" LastChildFill="True" />
+    </Border>
+</Window>

@@ -1,4 +1,8 @@
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 import Foundation
 
 /// Credentials Antigravity already has on the machine. On current builds the OAuth tokens live in the

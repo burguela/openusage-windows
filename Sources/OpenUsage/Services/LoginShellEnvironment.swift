@@ -97,6 +97,11 @@ final class LoginShellEnvironment: @unchecked Sendable {
     }
 
     private func capture() -> [String: String] {
+        #if os(Windows)
+        // Windows hands every process (tray app included) the user's full environment from the
+        // registry, so there is no login shell to consult: the process environment IS the answer.
+        return ProcessInfo.processInfo.environment
+        #else
         let shell = ProcessInfo.processInfo.environment["SHELL"]?.nilIfEmpty ?? "/bin/zsh"
         // `-i -l -c`: interactive + login so both rc files (.zshrc/.bashrc) and profile files
         // (.zprofile/.bash_profile) are sourced; `env -0` emits NUL-separated `KEY=VALUE`, robust
@@ -118,6 +123,7 @@ final class LoginShellEnvironment: @unchecked Sendable {
             AppLog.warn(.subprocess, "login-shell env capture failed: \(error.localizedDescription)")
             return [:]
         }
+        #endif
     }
 
     /// Parse the NUL-separated `env -0` output, keeping only the `KEY=VALUE` tokens between the begin

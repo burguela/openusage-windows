@@ -1,4 +1,3 @@
-import Darwin
 import Foundation
 
 /// Disk policy for one JSONL parser. `namespace` identifies the provider/parser; the scanner adds a
@@ -86,7 +85,7 @@ enum JSONLScanCachePaths {
     static let staleIdentityRetention: TimeInterval = 35 * 86_400
 
     static var defaultDirectory: URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        Platform.appDataDirectory
             .appendingPathComponent("OpenUsage/log-scan-cache", isDirectory: true)
     }
 
@@ -354,7 +353,7 @@ actor JSONLScanCacheWriter {
                     else { return }
                     try FileManager.default.removeItem(at: directory)
                 }
-            } catch let error as POSIXError where error.code == .EWOULDBLOCK {
+            } catch PlatformFileLock.LockError.wouldBlock {
                 continue
             } catch {
                 AppLog.warn(
@@ -389,12 +388,12 @@ actor JSONLScanCacheWriter {
 
     private static func createPrivateDirectory(_ url: URL) throws {
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: url.path)
+        try Platform.restrictToOwner(url.path, isDirectory: true)
     }
 
     private static func writePrivate(_ data: Data, to url: URL) throws {
         try data.write(to: url, options: .atomic)
-        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        try Platform.restrictToOwner(url.path, isDirectory: false)
     }
 
     private static func withExclusiveLock<Result>(
@@ -402,45 +401,28 @@ actor JSONLScanCacheWriter {
         nonblocking: Bool = false,
         _ body: () throws -> Result
     ) throws -> Result {
-        try withLock(
-            at: url,
-            operation: LOCK_EX | (nonblocking ? LOCK_NB : 0),
-            body
-        )
+        try withLock(at: url, mode: .exclusive, nonblocking: nonblocking, body)
     }
 
     private static func withSharedLock<Result>(
         at url: URL,
         _ body: () throws -> Result
     ) throws -> Result {
-        try withLock(at: url, operation: LOCK_SH, body)
+        try withLock(at: url, mode: .shared, nonblocking: false, body)
     }
 
     private static func withLock<Result>(
         at url: URL,
-        operation: Int32,
+        mode: PlatformFileLock.Mode,
+        nonblocking: Bool,
         _ body: () throws -> Result
     ) throws -> Result {
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
-        try FileManager.default.setAttributes(
-            [.posixPermissions: 0o700],
-            ofItemAtPath: url.deletingLastPathComponent().path
-        )
-        let fd = Darwin.open(url.path, O_CREAT | O_RDWR | O_CLOEXEC, mode_t(S_IRUSR | S_IWUSR))
-        guard fd >= 0 else { throw POSIXError(.init(rawValue: errno) ?? .EIO) }
-        defer {
-            flock(fd, LOCK_UN)
-            Darwin.close(fd)
-        }
-        guard Darwin.fchmod(fd, mode_t(S_IRUSR | S_IWUSR)) == 0 else {
-            throw POSIXError(.init(rawValue: errno) ?? .EIO)
-        }
-        guard flock(fd, operation) == 0 else {
-            throw POSIXError(.init(rawValue: errno) ?? .EIO)
-        }
-        return try body()
+        try Platform.restrictToOwner(url.deletingLastPathComponent().path, isDirectory: true)
+        let lock = try PlatformFileLock(url: url, mode: mode, nonblocking: nonblocking)
+        return try withExtendedLifetime(lock) { try body() }
     }
 }
