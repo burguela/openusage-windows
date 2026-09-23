@@ -30,6 +30,11 @@ Same-home cards share parsed data, and changing one source file rewrites only th
 leave the cache as the history window advances, and identities unused for 35 days are removed. App writes
 are debounced until after refresh; the one-shot CLI drains pending writes before it exits.
 
+Reading a large history for the first time can take a while. Claude gives its log scan one minute per
+refresh: past that, the card shows its live limits right away and keeps the last good spend history, and
+the scan stops. Files it finished stay in the parse cache, so the next refresh picks up where it left off
+instead of starting over, and the spend tiles fill in once the whole history has been read.
+
 ## When a fetch fails
 
 A failed refresh **never wipes your data**: the last good values stay on screen, and a small warning triangle appears next to the provider's name — hover it for the error message (e.g. "Not logged in"). The error clears on the next successful refresh.
