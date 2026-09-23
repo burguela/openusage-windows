@@ -97,7 +97,7 @@ final class JSONLScannerCancellationTests: XCTestCase {
         XCTAssertNil(cancelledResult)
     }
 
-    func testCancellationDuringParseReturnsNilWithoutPersistingPartialCache() async throws {
+    func testCancellationDuringParseReturnsNilAndPersistsOnlyFinishedFiles() async throws {
         let base = try makeDirectory("ActiveParse")
         defer { try? FileManager.default.removeItem(at: base) }
         let first = try makeIntegerFile(named: "first.jsonl", value: 1, in: base)
@@ -140,7 +140,68 @@ final class JSONLScannerCancellationTests: XCTestCase {
             parse: reloadCounter.parse
         )
         XCTAssertEqual(reloadedItems, [1, 2])
-        XCTAssertEqual(reloadCounter.count, 2)
+        // The first file's parse ran to completion, so it is cached; the second never started.
+        XCTAssertEqual(reloadCounter.count, 1)
+    }
+
+    /// Regression: a Claude history too big to read within one refresh deadline restarted from zero on
+    /// every refresh, so it never finished. The files finished before the deadline must survive, and a
+    /// one-shot process's final flush must wait for the cancelled scan to hand them over.
+    func testFlushAfterCancelledScanPersistsFinishedFilesForTheNextScan() async throws {
+        let base = try makeDirectory("Resume")
+        defer { try? FileManager.default.removeItem(at: base) }
+        let first = try makeIntegerFile(named: "first.jsonl", value: 1, in: base)
+        let second = try makeIntegerFile(named: "second.jsonl", value: 2, in: base)
+        let third = try makeIntegerFile(named: "third.jsonl", value: 3, in: base)
+        let persistence = JSONLScanCachePersistence(
+            namespace: "test",
+            schemaVersion: 1,
+            directory: base.appendingPathComponent("cache"),
+            writeDebounce: .seconds(60)
+        )
+        let scanner = IncrementalJSONLScanner<Int>(maxConcurrentParses: 1, persistence: persistence)
+        let gate = BlockingParser()
+        let task = Task {
+            await scanner.items(
+                from: [first, second, third],
+                since: .distantPast,
+                cacheIdentity: "home",
+                parse: { data in
+                    let value = String(data: data, encoding: .utf8).flatMap(Int.init)
+                    return value == 2 ? gate.parse(data) : value.map { [$0] }
+                }
+            )
+        }
+        guard await waitUntil({ gate.hasStarted }) else {
+            gate.unblock()
+            task.cancel()
+            _ = await task.value
+            return XCTFail("the parser did not reach the second file before the timeout")
+        }
+        task.cancel()
+        let flush = Task { await scanner.flushPendingWrites() }
+        guard await waitUntil({ await scanner.queuedScanCountForTesting(identity: "home") > 0 }) else {
+            gate.unblock()
+            _ = await flush.value
+            _ = await task.value
+            return XCTFail("the flush did not wait for the cancelled scan")
+        }
+        gate.unblock()
+        await flush.value
+        let cancelledResult = await task.value
+        XCTAssertNil(cancelledResult)
+
+        let reloadCounter = ParseCounter()
+        let reloaded = IncrementalJSONLScanner<Int>(persistence: persistence)
+        let reloadedItems = await reloaded.items(
+            from: [first, second, third],
+            since: .distantPast,
+            cacheIdentity: "home",
+            parse: reloadCounter.parse
+        )
+        XCTAssertEqual(reloadedItems, [1, 2, 3])
+        // The first two finished before the scan stopped; only the third is parsed again.
+        XCTAssertEqual(reloadCounter.count, 1)
     }
 
     private func waitUntil(

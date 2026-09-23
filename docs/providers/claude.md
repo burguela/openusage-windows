@@ -129,6 +129,7 @@ Local spend does not require a Claude OAuth login. If Claude Code uses an API-ke
 - **"Claude Desktop login is stale"** — open Claude Desktop so it can renew the login, then refresh OpenUsage.
 - **"Re-login for live usage"** (an amber warning on the Claude header) — your saved login can authenticate for inference but can't read your subscription limits, because it lacks the `user:profile` access (this is what an inference-only token from `claude setup-token` carries). Run `claude` and sign in again with your Claude account, then refresh; the spend tiles keep working in the meantime.
 - **"Updates blocked by Anthropic"** (an amber warning on the Claude header) — the usage API is throttling OpenUsage. It keeps the last values from the same login, shows when it will retry, and backs off in the meantime. A different login starts with a fresh cache and cooldown.
+- **Spend tiles are missing right after setup** — with a large Claude Code history, the first read can take longer than one refresh allows. The live Session and Weekly meters show meanwhile, and the spend tiles appear once the history has been read over the next refreshes (see [Refreshing](../refreshing.md)).
 - **Spend tiles show "No data"** — OpenUsage found no Claude Code logs in the last 30 days. If your logs live somewhere custom, set `CLAUDE_CONFIG_DIR` so both Claude Code and OpenUsage look in the same place.
 
 ## Under the hood

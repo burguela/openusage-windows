@@ -54,6 +54,7 @@ enum JSONLScanning {
 /// main actor. Provider scanner instances share one actor per parser; `Item` is that parser's row.
 actor IncrementalJSONLScanner<Item: Codable & Sendable> {
     private typealias CachedFile = JSONLScanCachedFile<Item>
+    typealias ParseResult = (file: JSONLScanning.DiscoveredFile, items: [Item]?, readFailed: Bool, oversizedRecordCount: Int)
 
     private struct IdentityWaiter {
         var id: UUID
@@ -160,7 +161,10 @@ actor IncrementalJSONLScanner<Item: Codable & Sendable> {
             initialState: initialState,
             parse: parse
         )
-        guard !Task.isCancelled else { return nil }
+        guard !Task.isCancelled else {
+            keepFinishedFiles(parseResults, identity: cacheIdentity, changedCount: toParse.count)
+            return nil
+        }
         let oversizedRecordCount = parseResults.reduce(0) { $0 + $1.oversizedRecordCount }
         if oversizedRecordCount > 0 {
             AppLog.warn(
@@ -204,6 +208,28 @@ actor IncrementalJSONLScanner<Item: Codable & Sendable> {
         return Task.isCancelled ? nil : items
     }
 
+    /// A scan cancelled mid-parse (a refresh deadline, or the local-usage time budget) still caches the
+    /// files it finished, so the next scan resumes instead of starting over: a history too big to parse
+    /// within one refresh fills in over a few. Nothing is removed, because an unfinished pass proves
+    /// nothing about the files it didn't reach.
+    private func keepFinishedFiles(_ results: [ParseResult], identity: String, changedCount: Int) {
+        var cache = caches[identity] ?? [:]
+        var kept: Set<String> = []
+        for result in results {
+            guard let items = result.items else { continue }
+            cache[result.file.path] = CachedFile(size: result.file.size, mtime: result.file.mtime, items: items)
+            kept.insert(result.file.path)
+        }
+        guard !kept.isEmpty else { return }
+        caches[identity] = cache
+        dirtyUpsertPaths[identity, default: []].formUnion(kept)
+        scheduleWrite(identity: identity)
+        AppLog.info(
+            logTag,
+            "local usage log scan interrupted; kept \(kept.count) of \(changedCount) changed files for the next scan"
+        )
+    }
+
     /// Wait for the real debounced tasks rather than bypassing them. Tests configure a tiny debounce,
     /// then use this to prove ordinary scans actually schedule and finish persistence.
     func waitForPendingWritesForTesting() async {
@@ -215,6 +241,11 @@ actor IncrementalJSONLScanner<Item: Codable & Sendable> {
     /// Commits the latest snapshots immediately. One-shot processes call this before exiting; the
     /// long-lived app keeps the ordinary debounced path so refresh latency is unaffected.
     func flushPendingWrites() async {
+        // A scan cancelled by a refresh deadline may still be saving the files it finished. Queue behind
+        // it so a one-shot process doesn't exit before that progress reaches the write below.
+        for identity in Array(activeIdentities) {
+            if await acquire(identity) { release(identity) }
+        }
         var identities = Set(writeTasks.keys)
         identities.formUnion(dirtyUpsertPaths.compactMap { $0.value.isEmpty ? nil : $0.key })
         identities.formUnion(dirtyRemovals.compactMap { $0.value.isEmpty ? nil : $0.key })
@@ -429,71 +460,5 @@ actor IncrementalJSONLScanner<Item: Codable & Sendable> {
             )
         }
         return result
-    }
-
-    /// Read + parse a bounded number of changed files in parallel. Results are keyed back to the input
-    /// order; a `nil` item list marks an unreadable file.
-    private static func parseFiles<State: Sendable>(
-        _ files: [JSONLScanning.DiscoveredFile],
-        maxConcurrentParses: Int,
-        permitPool: JSONLParsePermitPool,
-        initialState: State,
-        parse: @Sendable @escaping (Data, inout State) -> [Item]?
-    ) async -> [(file: JSONLScanning.DiscoveredFile, items: [Item]?, readFailed: Bool, oversizedRecordCount: Int)] {
-        await withTaskGroup(
-            of: (Int, [Item]?, Bool, Int).self,
-            returning: [
-                (file: JSONLScanning.DiscoveredFile, items: [Item]?, readFailed: Bool, oversizedRecordCount: Int)
-            ].self
-        ) { group in
-            func addTask(at index: Int) {
-                let file = files[index]
-                group.addTask {
-                    guard await permitPool.acquire() else { return (index, nil, false, 0) }
-                    let result: (Int, [Item]?, Bool, Int)
-                    if Task.isCancelled || !FileManager.default.fileExists(atPath: file.path) {
-                        result = (index, nil, false, 0)
-                    } else {
-                        do {
-                            let streamed = try JSONLStreamingReader.read(
-                                path: file.path,
-                                initialState: initialState,
-                                parse: parse
-                            )
-                            result = (index, streamed.items, false, streamed.oversizedRecordCount)
-                        } catch is CancellationError {
-                            result = (index, nil, false, 0)
-                        } catch {
-                            result = (index, nil, true, 0)
-                        }
-                    }
-                    await permitPool.release()
-                    return result
-                }
-            }
-
-            var nextIndex = 0
-            let initialCount = min(maxConcurrentParses, files.count)
-            for index in 0..<initialCount where !Task.isCancelled {
-                addTask(at: index)
-                nextIndex += 1
-            }
-
-            var results = files.map {
-                (file: $0, items: Optional<[Item]>.none, readFailed: false, oversizedRecordCount: 0)
-            }
-            for await (index, items, readFailed, oversizedRecordCount) in group {
-                if Task.isCancelled {
-                    group.cancelAll()
-                    break
-                }
-                results[index] = (files[index], items, readFailed, oversizedRecordCount)
-                if nextIndex < files.count {
-                    addTask(at: nextIndex)
-                    nextIndex += 1
-                }
-            }
-            return results
-        }
     }
 }
