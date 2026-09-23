@@ -45,6 +45,8 @@ public partial class PopupWindow : Window
     private bool _showingSettings;
     private bool _closing;
     private TextBlock? _footerStatus;
+    /// <summary>Preview renders freeze the clock and let the panel grow to its full height.</summary>
+    private DateTimeOffset? _previewNow;
 
     /// <summary>When the panel last hid itself on focus loss (see <see cref="ShouldIgnoreToggle"/>).</summary>
     public DateTime LastAutoHide { get; private set; } = DateTime.MinValue;
@@ -117,6 +119,7 @@ public partial class PopupWindow : Window
     {
         _dashboard = dashboard;
         _showingSettings = settings;
+        _previewNow = dashboard.GeneratedAt;
         if (expandFirstProvider && dashboard.Providers.FirstOrDefault(p => p.Enabled) is { } first)
         {
             _expandedProviders.Add(first.Id);
@@ -217,7 +220,9 @@ public partial class PopupWindow : Window
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             // Grow with the content up to the screen, like the Mac panel.
-            MaxHeight = Math.Max(240, SystemParameters.WorkArea.Height - 24 - 16 - 64 - (_showingSettings ? 44 : 0)),
+            MaxHeight = _previewNow != null
+                ? double.PositiveInfinity
+                : Math.Max(240, SystemParameters.WorkArea.Height - 24 - 16 - 64 - (_showingSettings ? 44 : 0)),
             Focusable = false,
         });
     }
@@ -298,7 +303,7 @@ public partial class PopupWindow : Window
         {
             return;
         }
-        _footerStatus.Text = FooterStatus(DateTimeOffset.UtcNow);
+        _footerStatus.Text = FooterStatus(_previewNow ?? DateTimeOffset.UtcNow);
     }
 
     /// <summary>"Next update in 3m" (seconds under a minute), or "Updating…" while a refresh runs.</summary>

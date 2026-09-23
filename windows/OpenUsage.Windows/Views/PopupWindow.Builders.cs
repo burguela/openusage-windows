@@ -39,6 +39,9 @@ public partial class PopupWindow
             HorizontalAlignment = horizontalAlignment,
             TextWrapping = wrap ? TextWrapping.Wrap : TextWrapping.NoWrap,
             TextTrimming = trim ? TextTrimming.CharacterEllipsis : TextTrimming.None,
+            // Segoe UI's default line is ~1.33 em; SF Pro's is ~1.2. Match the Mac's tighter rhythm.
+            LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
+            LineHeight = Math.Round(size * 1.22),
         };
 
     /// <summary>A vector glyph: stroked (chevrons, arrows) when <paramref name="stroke"/> is set, else filled.</summary>
