@@ -21,6 +21,8 @@ jobs:
   windows:
     name: Build Windows App
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -68,6 +70,21 @@ jobs:
           name: QuotaTray-windows-screenshots
           path: dist/screenshots
           if-no-files-found: error
+
+      - name: Publish screenshots to a review branch (temporary)
+        if: github.event_name == 'push'
+        shell: pwsh
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          $dir = Join-Path $env:RUNNER_TEMP shots
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          Copy-Item dist/screenshots/*.png $dir
+          Set-Location $dir
+          git init -q -b screenshots
+          git -c user.name=ci -c user.email=ci@localhost add .
+          git -c user.name=ci -c user.email=ci@localhost commit -q -m "Panel screenshots for ${{ github.sha }}"
+          git push -q "https://x-access-token:$env:TOKEN@github.com/${{ github.repository }}" "screenshots:refs/heads/review/quotatray-screenshots-${{ github.run_id }}"
 
       - name: Package
         shell: pwsh

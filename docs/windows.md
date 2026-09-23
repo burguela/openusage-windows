@@ -31,31 +31,25 @@ The panel follows the Mac popover's layout and colors, in Windows' light or dark
 
 ### In the taskbar
 
-Like the numbers the Mac app pins to the menu bar, Quota Tray puts your pinned readings in the taskbar,
-in the notification area next to the clock:
-
-- **Text** (the default Icon Style) shows one icon per pinned reading with its number, for example 36 for
-  Claude's Weekly limit, over a thin meter. The number turns yellow or red when a limit is close, and it
-  follows Show Usage As (Left or Used). Hover an icon for what it is ("Claude Weekly, 36% left · Resets in
-  1d 6h"). Up to four readings show; values that don't fit a small square, such as dollar amounts, stay in
-  the panel.
-- **Bars** shows a single icon with small meters for the first two pinned readings; hovering it lists
-  every pinned reading.
+Like the OpenUsage Mac app's menu-bar strip, Quota Tray shows your pinned readings right in the
+taskbar, just left of the notification area: each provider's mark followed by its values, with one value
+as a single bold number and two stacked on two lines (for example Claude's Session and Weekly). Click the
+strip to open the panel and right-click it for the menu. It follows Show Usage As (Left or Used), and a
+provider only appears once one of its pinned readings has data; until anything does, the strip shows
+the Quota Tray icon.
 
 The pinned readings are the Mac app's default stars (for example Claude Session and Weekly, Codex
-Session and Weekly) for the providers you have turned on. With nothing to show yet, the Quota Tray icon
-appears instead.
+Session and Weekly) for the providers you have turned on. **Icon Style** in Settings picks between this
+strip (Text, the default) and Bars, which drops the strip and draws small meters in the Quota Tray tray
+icon instead, as the Mac's Bars style does. The tray icon stays either way, in the notification area or
+behind its `^` arrow, and hovering it lists every pinned reading. A taskbar docked to the left or right
+side has no room for the strip, so there the tray icon shows the meters.
 
 <p align="center">
-  <img src="screenshots/windows-tray-light.png" alt="The Quota Tray icon on a light taskbar, with its hover text" width="340">
+  <img src="screenshots/windows-tray-light.png" alt="Quota Tray's strip in a light taskbar" width="420">
   &nbsp;
-  <img src="screenshots/windows-tray-dark.png" alt="The Quota Tray icon on a dark taskbar, with its hover text" width="340">
+  <img src="screenshots/windows-tray-dark.png" alt="Quota Tray's strip in a dark taskbar" width="420">
 </p>
-
-Windows 11 normally hides a new app's icons behind the `^` arrow. Quota Tray switches each of its icons
-on once, the first time Windows lists it, so the numbers show right away; to hide one later, use
-**Settings → Personalization → Taskbar → Other system tray icons**, and Quota Tray leaves that choice
-alone. On Windows 10, drag the icons out of the `^` overflow onto the taskbar.
 
 <p align="center">
   <img src="screenshots/windows-dashboard-light.png" alt="The Windows panel in light mode" width="260">
@@ -129,7 +123,7 @@ credentials on Windows, so Credential Manager is only a fallback.
 | Logs | `%LOCALAPPDATA%\QuotaTray\Logs\` (`Engine.log` from the engine, `QuotaTray.log` from the tray app) |
 | Spend-history parse cache, pricing cache | `%LOCALAPPDATA%\QuotaTray\` |
 | Launch at Login | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, value `QuotaTray` |
-| Show Total Spend, the selected spend period, Icon Style, which icons were shown on the taskbar | `HKCU\Software\QuotaTray` |
+| Show Total Spend, the selected spend period, Icon Style | `HKCU\Software\QuotaTray` |
 
 Deleting that preferences file resets Quota Tray to a first run.
 
@@ -173,7 +167,7 @@ iscc /DAppVersion=0.7.0 /DAppDir=$PWD\dist\QuotaTray /DOutputDir=$PWD\dist\insta
 
 While developing the tray app, set `QUOTATRAY_ENGINE` to a built `openusage-cli.exe` to use an engine
 from another folder. `QuotaTray.exe --render-preview <dashboard.json> <folder>` renders the panel (light and
-dark: dashboard, Settings, and the taskbar icons with one icon's hover text) to PNGs from a saved dashboard document; CI does this with
+dark: dashboard, Settings, and the taskbar strip) to PNGs from a saved dashboard document; CI does this with
 `windows/QuotaTray/Preview/sample-dashboard.json` and uploads the `QuotaTray-windows-screenshots`
 artifact. `windows/scripts/generate_assets.py` regenerates the tray app's icon (Quota Tray's own
 two-meter icon; the OpenUsage logo is the original project's trademark and isn't used) and provider

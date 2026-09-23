@@ -10,19 +10,12 @@ using QuotaTray.Engine;
 
 namespace QuotaTray.Tray;
 
-/// <summary>A pinned reading and the provider it belongs to.</summary>
-public sealed record TrayReading(ProviderInfo Provider, RowInfo Row, string Number);
-
 /// <summary>
-/// Draws the notification-area icons, the Windows counterpart of the Mac menu-bar strip. Text style
-/// draws one icon per pinned reading with its number; Bars style draws up to two mini meters in one
-/// icon. Without data the app icon shows.
+/// Draws the notification-area icon: in Bars style (and whenever the taskbar strip can't show) up to
+/// two mini meters for the pinned readings, otherwise the app icon.
 /// </summary>
 public static class TrayIconRenderer
 {
-    /// <summary>Icons the Text style shows at most, so the taskbar doesn't fill up.</summary>
-    public const int MaxReadings = 4;
-
     public static Icon LoadAppIcon()
     {
         using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("QuotaTray.ico")
@@ -41,39 +34,9 @@ public static class TrayIconRenderer
                 .Take(2)
                 .ToList();
 
-    /// <summary>
-    /// The readings the Text style draws, in dashboard order: pinned rows with data whose value fits
-    /// a small square ("58%" draws as 58). Longer values such as "$49.85" stay in the hover text.
-    /// </summary>
-    public static IReadOnlyList<TrayReading> Readings(Dashboard? dashboard) =>
-        dashboard == null
-            ? Array.Empty<TrayReading>()
-            : dashboard.Providers
-                .Where(p => p.Enabled)
-                .SelectMany(p => p.Rows.Select(r => (Provider: p, Row: r)))
-                .Where(x => x.Row.Pinned && x.Row.HasData)
-                .Select(x => new TrayReading(x.Provider, x.Row, NumberText(x.Row.CompactValue) ?? ""))
-                .Where(x => x.Number.Length > 0)
-                .Take(MaxReadings)
-                .ToList();
-
-    /// <summary>"58%" → "58"; null when the value isn't a number of up to three digits.</summary>
-    internal static string? NumberText(string compactValue)
-    {
-        var number = compactValue.Trim().TrimEnd('%');
-        return number.Length is > 0 and <= 3 && number.All(char.IsAsciiDigit) ? number : null;
-    }
-
     public static Icon DrawMeters(IReadOnlyList<RowInfo> meters, bool lightTaskbar)
     {
         using var bitmap = DrawMetersBitmap(meters, System.Windows.Forms.SystemInformation.SmallIconSize, lightTaskbar);
-        return ToIcon(bitmap);
-    }
-
-    public static Icon DrawReading(TrayReading reading, bool lightTaskbar)
-    {
-        using var bitmap = DrawReadingBitmap(reading.Row, reading.Number,
-            System.Windows.Forms.SystemInformation.SmallIconSize, lightTaskbar);
         return ToIcon(bitmap);
     }
 
@@ -98,48 +61,6 @@ public static class TrayIconRenderer
                 DrawBar(graphics, meter, new RectangleF(inset, top, size.Width - 2 * inset, barHeight), lightTaskbar);
                 top += barHeight + gap;
             }
-        }
-        return bitmap;
-    }
-
-    /// <summary>
-    /// One reading as a bitmap of <paramref name="size"/>: the number as large as the square allows,
-    /// with a thin meter under it when the reading has a limit (also used by the previews).
-    /// </summary>
-    internal static Bitmap DrawReadingBitmap(RowInfo row, string number, Size size, bool lightTaskbar)
-    {
-        var bitmap = new Bitmap(size.Width, size.Height);
-        using var graphics = Graphics.FromImage(bitmap);
-        graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        graphics.Clear(Color.Transparent);
-
-        var scale = size.Height / 16f;
-        var hasBar = row.Fraction.HasValue;
-        var barHeight = 2f * scale;
-        var textBox = new RectangleF(0, 0, size.Width, size.Height - (hasBar ? barHeight + 1.5f * scale : 2f * scale));
-
-        using var family = new FontFamily("Segoe UI");
-        using var path = new GraphicsPath();
-        path.AddString(number, family, (int)FontStyle.Bold, 100f, PointF.Empty, StringFormat.GenericTypographic);
-        var bounds = path.GetBounds();
-        var fit = Math.Min(textBox.Width / bounds.Width, textBox.Height / bounds.Height);
-        using (var matrix = new Matrix())
-        {
-            matrix.Translate(
-                textBox.Left + (textBox.Width - bounds.Width * fit) / 2f,
-                textBox.Top + (textBox.Height - bounds.Height * fit) / 2f);
-            matrix.Scale(fit, fit);
-            matrix.Translate(-bounds.Left, -bounds.Top);
-            path.Transform(matrix);
-        }
-        using (var textBrush = new SolidBrush(FillColor(row.Severity, lightTaskbar)))
-        {
-            graphics.FillPath(textBrush, path);
-        }
-
-        if (hasBar)
-        {
-            DrawBar(graphics, row, new RectangleF(0, size.Height - barHeight, size.Width, barHeight), lightTaskbar);
         }
         return bitmap;
     }

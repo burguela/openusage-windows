@@ -12,7 +12,7 @@ using Forms = System.Windows.Forms;
 namespace QuotaTray.Tray;
 
 /// <summary>
-/// Owns the notification-area icon, its menu, the popup, and the refresh schedule. All engine work
+/// Owns the taskbar strip, the notification-area icon, their menu, the popup, and the refresh schedule. All engine work
 /// runs off the UI thread; results are applied back on it.
 /// </summary>
 public sealed class TrayController : IPopupActions, IDisposable
@@ -24,7 +24,9 @@ public sealed class TrayController : IPopupActions, IDisposable
 
     private readonly App _app;
     private readonly EngineClient _engine;
-    private readonly TrayIconSet _icons;
+    private readonly TrayIcon _icon;
+    private readonly TaskbarStrip _strip;
+    private readonly Forms.ContextMenuStrip _menu;
     private readonly PopupWindow _popup;
     private readonly DispatcherTimer _timer;
     private readonly Forms.ToolStripMenuItem _launchAtLoginItem;
@@ -58,7 +60,11 @@ public sealed class TrayController : IPopupActions, IDisposable
         menu.Items.Add(new Forms.ToolStripMenuItem("Quit Quota Tray", null, (_, _) => Quit()));
         menu.Opening += (_, _) => _launchAtLoginItem.Checked = SafeLaunchAtLoginState();
 
-        _icons = new TrayIconSet(menu, OnIconClick);
+        _menu = menu;
+        _icon = new TrayIcon(menu, OnIconClick);
+        _strip = new TaskbarStrip(TogglePopup, ShowMenuAtCursor);
+        // When the strip can't show (a vertical taskbar, say), the tray icon draws the meters instead.
+        _strip.ShowingChanged += UpdateIcon;
 
         _timer = new DispatcherTimer { Interval = TickInterval };
         _timer.Tick += (_, _) => OnTick();
@@ -66,7 +72,8 @@ public sealed class TrayController : IPopupActions, IDisposable
 
     public void Start()
     {
-        _icons.Show();
+        _icon.Show();
+        UpdateTaskbar();
         _timer.Start();
         _ = StartupLoadAsync();
     }
@@ -81,8 +88,6 @@ public sealed class TrayController : IPopupActions, IDisposable
     private void OnTick()
     {
         _ticksSinceRefresh++;
-        // Windows lists a new icon a moment after it appears; catch it on the next tick.
-        TrayPromotion.PromoteNewIcons();
         if (_refreshing)
         {
             return;
@@ -95,10 +100,14 @@ public sealed class TrayController : IPopupActions, IDisposable
 
     private void OnIconClick(object? sender, Forms.MouseEventArgs e)
     {
-        if (e.Button != Forms.MouseButtons.Left)
+        if (e.Button == Forms.MouseButtons.Left)
         {
-            return;
+            TogglePopup();
         }
+    }
+
+    private void TogglePopup()
+    {
         if (_popup.IsVisible)
         {
             _popup.Hide();
@@ -108,6 +117,18 @@ public sealed class TrayController : IPopupActions, IDisposable
             _popup.ShowNearTray();
         }
     }
+
+    /// <summary>The tray icon's menu, for a right-click on the taskbar strip.</summary>
+    private void ShowMenuAtCursor()
+    {
+        _menu.Show(Forms.Cursor.Position, Forms.ToolStripDropDownDirection.AboveLeft);
+        // Like NotifyIcon does: bring the menu forward so a click anywhere else closes it.
+        SetForegroundWindow(_menu.Handle);
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static extern bool SetForegroundWindow(IntPtr hwnd);
 
     // MARK: - Engine
 
@@ -166,10 +187,24 @@ public sealed class TrayController : IPopupActions, IDisposable
         }
         _engineError = error;
         _popup.Update(dashboard, error, _refreshing);
-        UpdateIcons();
+        UpdateTaskbar();
     }
 
-    private void UpdateIcons() => _icons.Update(_dashboard, _engineError, UiSettings.TrayStyle);
+    /// <summary>Text style shows the readings in the taskbar strip, Bars style in the tray icon.</summary>
+    private void UpdateTaskbar()
+    {
+        if (UiSettings.TrayStyle == TrayStyle.Text)
+        {
+            _strip.Show(TaskbarStripView.Groups(_dashboard));
+        }
+        else
+        {
+            _strip.Hide();
+        }
+        UpdateIcon();
+    }
+
+    private void UpdateIcon() => _icon.Update(_dashboard, _engineError, drawMeters: !_strip.IsShowing);
 
     // MARK: - IPopupActions
 
@@ -199,7 +234,7 @@ public sealed class TrayController : IPopupActions, IDisposable
     public void SetTrayStyle(TrayStyle style)
     {
         UiSettings.TrayStyle = style;
-        UpdateIcons();
+        UpdateTaskbar();
         _popup.Update(null, _engineError, _refreshing);
     }
 
@@ -245,14 +280,14 @@ public sealed class TrayController : IPopupActions, IDisposable
         Theme.Reload();
         _popup.ApplyTheme();
         // The icons follow the taskbar's own light/dark setting.
-        UpdateIcons();
+        UpdateTaskbar();
     }
 
     public void ShowError(string message)
     {
         if (!_disposed)
         {
-            _icons.ShowBalloon(message);
+            _icon.ShowBalloon(message);
         }
     }
 
@@ -277,7 +312,8 @@ public sealed class TrayController : IPopupActions, IDisposable
         }
         _disposed = true;
         _timer.Stop();
-        _icons.Dispose();
+        _strip.Dispose();
+        _icon.Dispose();
         _popup.Close();
     }
 }

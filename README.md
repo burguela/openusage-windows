@@ -62,7 +62,8 @@ There are no signed releases of Quota Tray yet.
    It installs for your account only (no administrator rights), adds a Start menu entry, and starts
    Quota Tray when you sign in (you can untick that). Prefer no installer? `QuotaTray-windows-x64` is the
    same app as a portable folder.
-3. Your pinned readings appear as numbers in the taskbar, next to the clock, like the Mac app's menu bar.
+3. Your pinned readings appear in the taskbar next to the clock, provider icon and numbers, like the Mac
+   app's menu-bar strip.
    Uninstall from **Settings → Apps**.
 
 Once the fork publishes a GitHub release, PowerShell can do both steps:
@@ -70,7 +71,7 @@ Once the fork publishes a GitHub release, PowerShell can do both steps:
 or updates, and the same URL ending in `uninstall.ps1` removes it.
 
 <p align="center">
-  <img src="docs/screenshots/windows-tray-dark.png" alt="Quota Tray's readings in the Windows taskbar" width="340">
+  <img src="docs/screenshots/windows-tray-dark.png" alt="Quota Tray's readings in the Windows taskbar" width="420">
 </p>
 
 The build isn't code-signed, so Windows SmartScreen may warn the first time; choose **More info → Run
