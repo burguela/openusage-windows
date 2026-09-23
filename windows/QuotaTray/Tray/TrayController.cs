@@ -180,7 +180,7 @@ public sealed class TrayController : IPopupActions, IDisposable
     }
 
     /// <summary>"Quota Tray" plus the pinned readings, e.g. "Claude: Session 58% · Weekly 40%".</summary>
-    private static string Tooltip(Dashboard? dashboard, string? error)
+    internal static string Tooltip(Dashboard? dashboard, string? error)
     {
         var text = new StringBuilder("Quota Tray");
         if (error != null)

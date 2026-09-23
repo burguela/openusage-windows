@@ -21,6 +21,8 @@ jobs:
   windows:
     name: Build Windows App
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -69,6 +71,21 @@ jobs:
           path: dist/screenshots
           if-no-files-found: error
 
+      - name: Publish screenshots to a review branch (temporary)
+        if: github.event_name == 'push'
+        shell: pwsh
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          $dir = Join-Path $env:RUNNER_TEMP shots
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          Copy-Item dist/screenshots/*.png $dir
+          Set-Location $dir
+          git init -q -b screenshots
+          git -c user.name=ci -c user.email=ci@localhost add .
+          git -c user.name=ci -c user.email=ci@localhost commit -q -m "Panel screenshots for ${{ github.sha }}"
+          git push -q "https://x-access-token:$env:TOKEN@github.com/${{ github.repository }}" "screenshots:refs/heads/review/quotatray-screenshots-${{ github.run_id }}"
+
       - name: Package
         shell: pwsh
         run: windows/scripts/package.ps1 -BuildDir .build/release -OutDir dist/QuotaTray
@@ -77,6 +94,43 @@ jobs:
         with:
           name: QuotaTray-windows-x64
           path: dist/QuotaTray
+          if-no-files-found: error
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $version = (& dist/QuotaTray/quotatray-engine.exe dashboard --cached | ConvertFrom-Json).appVersion
+          if (-not $version) { throw 'the engine did not report an app version' }
+          if (-not (Get-Command iscc.exe -ErrorAction SilentlyContinue)) {
+            choco install innosetup --no-progress -y | Out-Null
+            $env:PATH += ";${env:ProgramFiles(x86)}\Inno Setup 6"
+          }
+          iscc.exe "/DAppVersion=$version" "/DAppDir=$PWD\dist\QuotaTray" "/DOutputDir=$PWD\dist\installer" windows\installer\QuotaTray.iss
+          if ($LASTEXITCODE -ne 0) { throw "iscc failed ($LASTEXITCODE)" }
+
+      - name: Smoke-test installer
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist/installer/QuotaTray-Setup-*.exe | Select-Object -First 1
+          $p = Start-Process $setup.FullName -Wait -PassThru -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/TASKS=startup'
+          if ($p.ExitCode -ne 0) { throw "install failed ($($p.ExitCode))" }
+          $app = Join-Path $env:LOCALAPPDATA 'Programs\QuotaTray'
+          $check = & (Join-Path $app 'quotatray-engine.exe') dashboard --cached | ConvertFrom-Json
+          if ($check.schema -ne 'openusage.desktop.v1') { throw 'installed engine failed its smoke test' }
+          $run = Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name QuotaTray -ErrorAction SilentlyContinue
+          if (-not $run) { throw 'the startup task did not add Launch at Login' }
+          $p = Start-Process (Join-Path $app 'unins000.exe') -Wait -PassThru -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'
+          if ($p.ExitCode -ne 0) { throw "uninstall failed ($($p.ExitCode))" }
+          Start-Sleep -Seconds 2
+          if (Test-Path (Join-Path $app 'QuotaTray.exe')) { throw 'uninstall left the app behind' }
+          if (Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name QuotaTray -ErrorAction SilentlyContinue) {
+            throw 'uninstall left Launch at Login behind'
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: QuotaTray-windows-setup
+          path: dist/installer/*.exe
           if-no-files-found: error
 
   engine-tests-windows:

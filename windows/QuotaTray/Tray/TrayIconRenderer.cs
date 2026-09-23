@@ -52,13 +52,29 @@ public sealed class TrayIconRenderer : IDisposable
     private static Icon DrawMeters(IReadOnlyList<RowInfo> meters)
     {
         var size = System.Windows.Forms.SystemInformation.SmallIconSize;
-        using var bitmap = new Bitmap(size.Width, size.Height);
+        using var bitmap = DrawMetersBitmap(meters, size, TaskbarUsesLightTheme());
+        var handle = bitmap.GetHicon();
+        try
+        {
+            // Icon.FromHandle doesn't own the handle; clone it so the HICON can be freed right away.
+            using var borrowed = Icon.FromHandle(handle);
+            return (Icon)borrowed.Clone();
+        }
+        finally
+        {
+            DestroyIcon(handle);
+        }
+    }
+
+    /// <summary>The meters icon as a bitmap of <paramref name="size"/> (also used by the previews).</summary>
+    internal static Bitmap DrawMetersBitmap(IReadOnlyList<RowInfo> meters, Size size, bool lightTaskbar)
+    {
+        var bitmap = new Bitmap(size.Width, size.Height);
         using (var graphics = Graphics.FromImage(bitmap))
         {
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
             graphics.Clear(Color.Transparent);
 
-            var lightTaskbar = TaskbarUsesLightTheme();
             var track = lightTaskbar ? Color.FromArgb(70, 0, 0, 0) : Color.FromArgb(90, 255, 255, 255);
             var scale = size.Height / 16f;
             var barHeight = (meters.Count == 1 ? 6f : 5f) * scale;
@@ -84,18 +100,7 @@ public sealed class TrayIconRenderer : IDisposable
                 top += barHeight + gap;
             }
         }
-
-        var handle = bitmap.GetHicon();
-        try
-        {
-            // Icon.FromHandle doesn't own the handle; clone it so the HICON can be freed right away.
-            using var borrowed = Icon.FromHandle(handle);
-            return (Icon)borrowed.Clone();
-        }
-        finally
-        {
-            DestroyIcon(handle);
-        }
+        return bitmap;
     }
 
     private static Color FillColor(string? severity, bool lightTaskbar) => severity switch

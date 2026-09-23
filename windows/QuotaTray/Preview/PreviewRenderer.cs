@@ -14,7 +14,8 @@ namespace QuotaTray.Preview;
 
 /// <summary>
 /// <c>QuotaTray.exe --render-preview dashboard.json out-folder</c>: renders the panel (dashboard and
-/// Settings, light and dark) to PNGs from a saved dashboard document, without the tray or the engine.
+/// Settings) and the taskbar icon with its tooltip, light and dark, to PNGs from a saved dashboard
+/// document, without the tray or the engine.
 /// CI uses it to publish screenshots of the Windows UI.
 /// </summary>
 public static class PreviewRenderer
@@ -36,6 +37,7 @@ public static class PreviewRenderer
                 Save(panel, window, Path.Combine(outputFolder, name));
                 window.Close();
             }
+            TrayPreview.Save(dashboard, dark, Path.Combine(outputFolder, $"tray-{(dark ? "dark" : "light")}.png"));
         }
         return 0;
     }
@@ -50,11 +52,17 @@ public static class PreviewRenderer
             Child = panel,
             Width = window.Width,
         };
-        TextOptions.SetTextFormattingMode(host, TextFormattingMode.Ideal);
         host.SetValue(TextElement.FontFamilyProperty, window.FontFamily);
         host.SetValue(TextElement.FontSizeProperty, window.FontSize);
         host.Resources.MergedDictionaries.Add(window.Resources);
-        host.Measure(new Size(window.Width, double.PositiveInfinity));
+        SaveElement(host, window.Width, path);
+    }
+
+    /// <summary>Lays <paramref name="host"/> out at <paramref name="width"/> and saves it as a 2x PNG.</summary>
+    internal static void SaveElement(FrameworkElement host, double width, string path)
+    {
+        TextOptions.SetTextFormattingMode(host, TextFormattingMode.Ideal);
+        host.Measure(new Size(width, double.PositiveInfinity));
         host.Arrange(new Rect(host.DesiredSize));
         host.UpdateLayout();
 

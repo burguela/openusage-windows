@@ -58,9 +58,12 @@ There are no signed releases of Quota Tray yet.
 
 1. Open the latest successful run of the **Windows** workflow in this repository's
    [Actions tab](https://github.com/burguela/openusage-windows/actions/workflows/windows.yml).
-2. Download the `QuotaTray-windows-x64` artifact and unzip it anywhere, for example
-   `%LOCALAPPDATA%\Programs\QuotaTray`.
-3. Run `QuotaTray.exe`. The icon appears in the notification area (it may start in the `^` overflow).
+2. Download the `QuotaTray-windows-setup` artifact, unzip it, and run `QuotaTray-Setup-<version>-x64.exe`.
+   It installs for your account only (no administrator rights), adds a Start menu entry, and can start
+   Quota Tray when you sign in. Prefer no installer? `QuotaTray-windows-x64` is the same app as a portable
+   folder.
+3. The icon appears in the notification area next to the clock (it may start in the `^` overflow; drag it
+   onto the taskbar to keep it visible).
 
 The build isn't code-signed, so Windows SmartScreen may warn the first time; choose **More info → Run
 anyway**. Requires Windows 10 or 11 (x64). See [docs/windows.md](docs/windows.md) for how to use it, where

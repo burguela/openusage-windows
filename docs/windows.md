@@ -28,8 +28,17 @@ The panel follows the Mac popover's layout and colors, in Windows' light or dark
 - **Right-click the tray icon** for Open Quota Tray, Refresh Now, Settings, Launch at Login, Open Log
   Folder, and Quit Quota Tray.
 
-The tray icon draws two small meters for the first two pinned rows that have data (Claude's Session
-and Weekly by default), in yellow or red when a limit is close. Hovering it lists every pinned reading.
+The tray icon sits in the notification area at the right end of the taskbar, next to the clock. It
+draws two small meters for the first two pinned rows that have data (Claude's Session and Weekly by
+default), in yellow or red when a limit is close. Hovering it lists every pinned reading as text. Unlike
+the Mac menu bar, a tray icon is a small square, so the numbers live in that hover text and the panel.
+
+<p align="center">
+  <img src="screenshots/windows-tray-light.png" alt="The Quota Tray icon on a light taskbar, with its hover text" width="340">
+  &nbsp;
+  <img src="screenshots/windows-tray-dark.png" alt="The Quota Tray icon on a dark taskbar, with its hover text" width="340">
+</p>
+
 Windows may place a new tray icon in the overflow (the `^` arrow); drag it onto the taskbar to keep it
 visible.
 
@@ -43,11 +52,20 @@ visible.
 
 ## Installing
 
-There are no signed releases yet. Download the `QuotaTray-windows-x64` artifact from the latest successful
-run of the fork's [Windows workflow](https://github.com/burguela/openusage-windows/actions/workflows/windows.yml),
-unzip it anywhere (for example `%LOCALAPPDATA%\Programs\QuotaTray`), and run `QuotaTray.exe`. The build
-isn't code-signed, so SmartScreen may warn the first time; choose **More info → Run anyway**. To update,
-quit Quota Tray and replace the folder; settings and caches live elsewhere and are kept.
+There are no signed releases yet. Each successful run of the fork's
+[Windows workflow](https://github.com/burguela/openusage-windows/actions/workflows/windows.yml) offers two
+downloads:
+
+- **`QuotaTray-windows-setup`** — the installer (`QuotaTray-Setup-<version>-x64.exe`). It installs for
+  your Windows account only, so it needs no administrator rights, into
+  `%LOCALAPPDATA%\Programs\QuotaTray`. It adds Quota Tray to the Start menu, can start it when you sign
+  in (checked by default), and can add a desktop shortcut. Run a newer installer to update; it closes a
+  running copy first. Uninstall from **Settings → Apps**; your settings and caches stay, so a reinstall
+  picks up where you left off.
+- **`QuotaTray-windows-x64`** — the same app as a portable folder. Unzip it anywhere and run
+  `QuotaTray.exe`; to update, quit Quota Tray and replace the folder.
+
+Neither is code-signed yet, so SmartScreen may warn the first time; choose **More info → Run anyway**.
 
 ## First run and refreshing
 
@@ -107,7 +125,10 @@ The folder also holds the Swift runtime DLLs, the engine's resources (`OpenUsage
 and `sqlite3.exe`, which Cursor, Devin, OpenCode, and Claude Desktop need to read their local databases.
 
 The `Windows` GitHub Actions workflow (`.github/workflows/windows.yml`) builds everything on
-`windows-latest` and uploads the folder as the `QuotaTray-windows-x64` artifact. To build locally:
+`windows-latest`, uploads the folder as the `QuotaTray-windows-x64` artifact, then builds the installer
+from that folder with [Inno Setup](https://jrsoftware.org/isinfo.php) (`windows/installer/QuotaTray.iss`),
+checks that it installs and uninstalls cleanly, and uploads it as `QuotaTray-windows-setup`. To build
+locally:
 
 ```powershell
 # Swift 6.2 for Windows and the .NET 8 SDK installed. The -D flags let Swift 6.2's Clang use a newer
@@ -116,11 +137,13 @@ swift build -c release --product openusage-cli -Xcc -D_ALLOW_COMPILER_AND_STL_VE
 dotnet publish windows/QuotaTray/QuotaTray.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o dist/QuotaTray
 windows/scripts/package.ps1 -BuildDir .build/release -OutDir dist/QuotaTray
 dist/QuotaTray/QuotaTray.exe
+# Optional: the installer (Inno Setup 6). The version is the one the engine reports.
+iscc /DAppVersion=0.7.0 /DAppDir=$PWD\dist\QuotaTray /DOutputDir=$PWD\dist\installer windows\installer\QuotaTray.iss
 ```
 
 While developing the tray app, set `QUOTATRAY_ENGINE` to a built `openusage-cli.exe` to use an engine
-from another folder. `QuotaTray.exe --render-preview <dashboard.json> <folder>` renders the panel (light,
-dark, dashboard, Settings) to PNGs from a saved dashboard document; CI does this with
+from another folder. `QuotaTray.exe --render-preview <dashboard.json> <folder>` renders the panel (light and
+dark: dashboard, Settings, and the taskbar icon with its hover text) to PNGs from a saved dashboard document; CI does this with
 `windows/QuotaTray/Preview/sample-dashboard.json` and uploads the `QuotaTray-windows-screenshots`
 artifact. `windows/scripts/generate_assets.py` regenerates the tray app's icon (Quota Tray's own
 two-meter icon; the OpenUsage logo is the original project's trademark and isn't used) and provider
