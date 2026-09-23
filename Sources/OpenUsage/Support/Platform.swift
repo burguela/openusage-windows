@@ -225,7 +225,7 @@ final class PlatformFileLock {
         let handle = url.path.withCString(encodedAs: UTF16.self) { path in
             CreateFileW(
                 path,
-                GENERIC_READ | GENERIC_WRITE,
+                DWORD(GENERIC_READ) | DWORD(GENERIC_WRITE),
                 DWORD(FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE),
                 nil,
                 DWORD(OPEN_ALWAYS),

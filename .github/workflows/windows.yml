@@ -1,0 +1,89 @@
+name: Windows
+
+# Builds OpenUsage for Windows: the shared Swift engine (`openusage-cli.exe`) plus the WPF
+# notification-area app (`OpenUsage.exe`), packaged into one zip artifact. See docs/windows.md.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Build Windows App
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Swift
+        uses: compnerd/gha-setup-swift@main
+        with:
+          branch: swift-6.2-release
+          tag: 6.2-RELEASE
+
+      - name: Build engine
+        run: swift build -c release --product openusage-cli
+
+      - name: Smoke-test engine
+        shell: pwsh
+        run: |
+          $out = .build/release/openusage-cli.exe dashboard --cached | ConvertFrom-Json
+          if ($out.schema -ne 'openusage.desktop.v1') { throw "unexpected schema: $($out.schema)" }
+          Write-Host "providers: $($out.providers.id -join ', ')"
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish tray app
+        run: >
+          dotnet publish windows/OpenUsage.Windows/OpenUsage.Windows.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -o dist/OpenUsage
+
+      - name: Package
+        shell: pwsh
+        run: windows/scripts/package.ps1 -BuildDir .build/release -OutDir dist/OpenUsage
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenUsage-windows-x64
+          path: dist/OpenUsage
+          if-no-files-found: error
+
+  engine-tests-windows:
+    # Informational until the suite has been triaged on Windows: many tests were written against
+    # POSIX paths. Failures here show what still needs porting; they don't block the build above.
+    name: Engine Tests (Windows, Informational)
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: compnerd/gha-setup-swift@main
+        with:
+          branch: swift-6.2-release
+          tag: 6.2-RELEASE
+      - run: swift test
+
+  engine-linux:
+    # Keeps the engine portable: the same non-Apple code paths Windows uses, on Linux.
+    name: Engine Build and Test (Linux)
+    runs-on: ubuntu-latest
+    container: swift:6.2-noble
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install tools the providers shell out to
+        run: apt-get update && apt-get install -y --no-install-recommends lsof sqlite3
+      - run: swift build
+      - run: swift test

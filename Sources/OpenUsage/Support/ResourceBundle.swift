@@ -14,7 +14,7 @@ extension Bundle {
     /// `Bundle.module` for `swift run` / `swift test`, where the build path is valid.
     static let openUsageResources: Bundle = {
         // SwiftPM names the copied-resources folder `.bundle` on Apple platforms and `.resources`
-        // elsewhere; the Windows build ships it beside `openusage.exe`.
+        // elsewhere; the Windows build ships it beside `openusage-cli.exe`.
         #if canImport(Darwin)
         let bundleName = "OpenUsage_OpenUsage.bundle"
         #else

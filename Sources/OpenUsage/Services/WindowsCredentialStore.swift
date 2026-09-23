@@ -110,7 +110,7 @@ struct SecurityKeychainAccessor: KeychainAccessing {
             userName.withCString(encodedAs: UTF16.self) { user in
                 blob.withUnsafeMutableBytes { bytes -> Bool in
                     var credential = CREDENTIALW()
-                    credential.Type = DWORD(CRED_TYPE_GENERIC)
+                    credential.`Type` = DWORD(CRED_TYPE_GENERIC)
                     credential.TargetName = UnsafeMutablePointer(mutating: name)
                     credential.UserName = UnsafeMutablePointer(mutating: user)
                     credential.CredentialBlobSize = DWORD(bytes.count)
