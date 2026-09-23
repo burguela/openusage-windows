@@ -114,8 +114,11 @@ public partial class PopupWindow : Window
 
     public void ApplyTheme() => Render();
 
-    /// <summary>Shows the panel off-screen without activating it, for <c>--render-preview</c>.</summary>
-    public void ShowForPreview(Dashboard dashboard, bool settings, bool expandFirstProvider)
+    /// <summary>
+    /// Renders the panel for <c>--render-preview</c> and hands back its frame, detached from this
+    /// window so it can lay out at full height (a window can't grow past the screen).
+    /// </summary>
+    public FrameworkElement RenderForPreview(Dashboard dashboard, bool settings, bool expandFirstProvider)
     {
         _dashboard = dashboard;
         _showingSettings = settings;
@@ -125,11 +128,8 @@ public partial class PopupWindow : Window
             _expandedProviders.Add(first.Id);
         }
         Render();
-        ShowActivated = false;
-        Left = -20000;
-        Top = 0;
-        Show();
-        UpdateLayout();
+        Content = null;
+        return Frame;
     }
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
