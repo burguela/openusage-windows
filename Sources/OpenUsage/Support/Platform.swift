@@ -32,7 +32,7 @@ enum Platform {
     /// then on `PATH`. `nil` when nothing usable is found, so callers can fail loudly with context.
     static func findExecutable(_ name: String) -> URL? {
         if isAbsolutePath(name) {
-            return FileManager.default.isExecutableFile(atPath: name) ? URL(fileURLWithPath: name) : nil
+            return isExistingExecutable(atPath: name) ? URL(fileURLWithPath: name) : nil
         }
         var directories: [URL] = []
         if let executableDirectory = Bundle.main.executableURL?.deletingLastPathComponent() {
@@ -48,12 +48,22 @@ enum Platform {
         for directory in directories {
             for candidate in candidates {
                 let url = directory.appendingPathComponent(candidate)
-                if FileManager.default.isExecutableFile(atPath: url.path) {
+                if isExistingExecutable(atPath: url.path) {
                     return url
                 }
             }
         }
         return nil
+    }
+
+    /// swift-corelibs-foundation on Windows answers `isExecutableFile` from the file extension alone,
+    /// so a missing `sqlite3.com` next to the engine counted as found and shadowed the real
+    /// `sqlite3.exe`. Require an existing regular file too.
+    static func isExistingExecutable(atPath path: String) -> Bool {
+        var isDirectory: ObjCBool = false
+        return FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory)
+            && !isDirectory.boolValue
+            && FileManager.default.isExecutableFile(atPath: path)
     }
 
     static func isAbsolutePath(_ path: String) -> Bool {
