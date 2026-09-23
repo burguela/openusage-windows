@@ -20,8 +20,6 @@ jobs:
   windows:
     name: Build Windows App
     runs-on: windows-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -63,21 +61,6 @@ jobs:
             '--render-preview', 'windows/OpenUsage.Windows/Preview/sample-dashboard.json', 'dist/screenshots')
           if ($p.ExitCode -ne 0) { throw "preview render failed ($($p.ExitCode))" }
           Get-ChildItem dist/screenshots | Format-Table Name, Length
-
-      - name: Publish screenshots to a review branch (temporary)
-        if: github.event_name == 'push'
-        shell: pwsh
-        env:
-          TOKEN: ${{ github.token }}
-        run: |
-          $dir = Join-Path $env:RUNNER_TEMP shots
-          New-Item -ItemType Directory -Force $dir | Out-Null
-          Copy-Item dist/screenshots/*.png $dir
-          Set-Location $dir
-          git init -q -b screenshots
-          git -c user.name=ci -c user.email=ci@localhost add .
-          git -c user.name=ci -c user.email=ci@localhost commit -q -m "Panel screenshots for ${{ github.sha }}"
-          git push -q -f "https://x-access-token:$env:TOKEN@github.com/${{ github.repository }}" screenshots:refs/heads/review/windows-screenshots
 
       - uses: actions/upload-artifact@v4
         with:
