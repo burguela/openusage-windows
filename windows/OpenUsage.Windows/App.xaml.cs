@@ -22,6 +22,20 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        if (e.Args.Length == 3 && e.Args[0] == "--render-preview")
+        {
+            try
+            {
+                Shutdown(Preview.PreviewRenderer.Run(e.Args[1], e.Args[2]));
+            }
+            catch (Exception error)
+            {
+                Console.Error.WriteLine($"preview failed: {error}");
+                Shutdown(1);
+            }
+            return;
+        }
+
         _singleInstance = new Mutex(initiallyOwned: true, SingleInstanceName, out var createdNew);
         if (!createdNew)
         {

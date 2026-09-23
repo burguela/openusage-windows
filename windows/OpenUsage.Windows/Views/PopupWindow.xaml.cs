@@ -23,19 +23,28 @@ public interface IPopupActions
 }
 
 /// <summary>
-/// The dashboard panel that opens above the tray icon: provider sections with their meters, plus a
-/// Settings screen in the same panel (like the Mac popover). Built in code from the engine's
-/// display-ready dashboard; it closes when it loses focus.
+/// The panel that opens above the tray icon, laid out like the Mac popover: the Total Spend card,
+/// then one grouped card per provider, and a pinned footer with the version, the next-update
+/// countdown, and the Options menu. Settings opens in the same panel. Built in code from the
+/// engine's display-ready dashboard; it closes when it loses focus.
 /// </summary>
 public partial class PopupWindow : Window
 {
+    // The Mac popover's metrics (DashboardView, DensitySetting.regular), in device-independent pixels.
+    private const double OuterPadding = 14;
+    private const double SectionSpacing = 14;
+    private const double HeaderToCard = 4;
+    private static readonly TimeSpan RefreshInterval = TimeSpan.FromMinutes(5);
+
     private readonly IPopupActions _actions;
     private readonly HashSet<string> _expandedProviders = new();
+    private readonly DispatcherTimer _clock;
     private Dashboard? _dashboard;
     private string? _engineError;
     private bool _refreshing;
     private bool _showingSettings;
     private bool _closing;
+    private TextBlock? _footerStatus;
 
     /// <summary>When the panel last hid itself on focus loss (see <see cref="ShouldIgnoreToggle"/>).</summary>
     public DateTime LastAutoHide { get; private set; } = DateTime.MinValue;
@@ -57,6 +66,20 @@ public partial class PopupWindow : Window
         };
         SizeChanged += (_, _) => PositionNearTray();
         PreviewKeyDown += OnPreviewKeyDown;
+        // The footer's "Next update in …" counts down every second while the panel is open.
+        _clock = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _clock.Tick += (_, _) => UpdateFooterStatus();
+        IsVisibleChanged += (_, _) =>
+        {
+            if (IsVisible)
+            {
+                _clock.Start();
+            }
+            else
+            {
+                _clock.Stop();
+            }
+        };
         Render();
     }
 
@@ -89,14 +112,30 @@ public partial class PopupWindow : Window
 
     public void ApplyTheme() => Render();
 
+    /// <summary>Shows the panel off-screen without activating it, for <c>--render-preview</c>.</summary>
+    public void ShowForPreview(Dashboard dashboard, bool settings, bool expandFirstProvider)
+    {
+        _dashboard = dashboard;
+        _showingSettings = settings;
+        if (expandFirstProvider && dashboard.Providers.FirstOrDefault(p => p.Enabled) is { } first)
+        {
+            _expandedProviders.Add(first.Id);
+        }
+        Render();
+        ShowActivated = false;
+        Left = -20000;
+        Top = 0;
+        Show();
+        UpdateLayout();
+    }
+
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Escape)
         {
             if (_showingSettings)
             {
-                _showingSettings = false;
-                Render();
+                ShowScreen(settings: false);
             }
             else
             {
@@ -111,9 +150,15 @@ public partial class PopupWindow : Window
         }
     }
 
+    private void ShowScreen(bool settings)
+    {
+        _showingSettings = settings;
+        Render();
+    }
+
     private void PositionNearTray()
     {
-        if (!IsVisible)
+        if (!IsVisible || !ShowActivated)
         {
             return;
         }
@@ -137,20 +182,27 @@ public partial class PopupWindow : Window
     private void Render()
     {
         var theme = Theme.Current;
-        Frame.Background = theme.Background;
-        Frame.BorderBrush = theme.Border;
+        Frame.Background = theme.Tray;
+        Frame.BorderBrush = theme.PanelBorder;
         Foreground = theme.TextPrimary;
+        Resources["ScrollThumbBrush"] = theme.ScrollThumb;
         Root.Children.Clear();
 
-        var header = BuildHeader(theme);
-        DockPanel.SetDock(header, Dock.Top);
-        Root.Children.Add(header);
+        if (_showingSettings)
+        {
+            var topBar = BuildTopBar(theme);
+            DockPanel.SetDock(topBar, Dock.Top);
+            Root.Children.Add(topBar);
+        }
 
         var footer = BuildFooter(theme);
         DockPanel.SetDock(footer, Dock.Bottom);
         Root.Children.Add(footer);
 
-        var body = new StackPanel { Margin = new Thickness(0, 0, 0, 4) };
+        var body = new StackPanel
+        {
+            Margin = new Thickness(OuterPadding, _showingSettings ? 4 : OuterPadding, OuterPadding, 12),
+        };
         if (_showingSettings)
         {
             BuildSettings(body, theme);
@@ -164,248 +216,110 @@ public partial class PopupWindow : Window
             Content = body,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            MaxHeight = Math.Max(240, SystemParameters.WorkArea.Height * 0.72),
-            Padding = new Thickness(0, 0, 2, 0),
+            // Grow with the content up to the screen, like the Mac panel.
+            MaxHeight = Math.Max(240, SystemParameters.WorkArea.Height - 24 - 16 - 64 - (_showingSettings ? 44 : 0)),
+            Focusable = false,
         });
     }
 
-    private UIElement BuildHeader(Theme theme)
+    /// <summary>Settings' navigation bar: a Back capsule and the centered screen title.</summary>
+    private UIElement BuildTopBar(Theme theme)
     {
-        var grid = new Grid { Margin = new Thickness(16, 12, 10, 6) };
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-        var title = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        if (_showingSettings)
-        {
-            title.Children.Add(LinkButton("‹ Back", theme, () =>
-            {
-                _showingSettings = false;
-                Render();
-            }, fontSize: 13));
-            title.Children.Add(Text("Settings", theme.TextPrimary, 15, FontWeights.SemiBold, new Thickness(8, 0, 0, 0)));
-        }
-        else
-        {
-            if (ProviderMarks.For("openusage") is Geometry mark)
-            {
-                title.Children.Add(MarkIcon(mark, theme.Accent, 18, new Thickness(0, 0, 8, 0)));
-            }
-            title.Children.Add(Text("OpenUsage", theme.TextPrimary, 15, FontWeights.SemiBold));
-        }
-        grid.Children.Add(title);
-
-        if (!_showingSettings)
-        {
-            var settings = LinkButton("Settings", theme, () =>
-            {
-                _showingSettings = true;
-                Render();
-            });
-            Grid.SetColumn(settings, 1);
-            grid.Children.Add(settings);
-        }
+        var grid = new Grid { Height = 44, Margin = new Thickness(OuterPadding, 0, OuterPadding, 0) };
+        grid.Children.Add(Text("Settings", theme.TextPrimary, 13, FontWeights.SemiBold,
+            horizontalAlignment: HorizontalAlignment.Center, verticalAlignment: VerticalAlignment.Center));
+        var back = new StackPanel { Orientation = Orientation.Horizontal };
+        back.Children.Add(Glyph(Glyphs.ChevronLeft, theme.TextPrimary, 10, stroke: 1.6, margin: new Thickness(0, 0, 5, 0)));
+        back.Children.Add(Text("Back", theme.TextPrimary, 13, FontWeights.Medium, verticalAlignment: VerticalAlignment.Center));
+        var button = Capsule(back, theme, () => ShowScreen(settings: false), new Thickness(10, 0, 14, 0));
+        button.HorizontalAlignment = HorizontalAlignment.Left;
+        grid.Children.Add(button);
         return grid;
     }
 
+    /// <summary>
+    /// The pinned footer: "OpenUsage x.y.z" over the next-update countdown (click it to refresh now),
+    /// and on the dashboard the Options menu capsule.
+    /// </summary>
     private UIElement BuildFooter(Theme theme)
     {
-        var border = new Border
-        {
-            BorderBrush = theme.Divider,
-            BorderThickness = new Thickness(0, 1, 0, 0),
-            Padding = new Thickness(16, 8, 10, 10),
-        };
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        grid.Children.Add(Text(StatusLine(), theme.TextSecondary, 12, verticalAlignment: VerticalAlignment.Center));
 
-        var buttons = new StackPanel { Orientation = Orientation.Horizontal };
-        buttons.Children.Add(LinkButton(_refreshing ? "Refreshing…" : "Refresh", theme, _actions.RefreshNow, enabled: !_refreshing));
-        buttons.Children.Add(LinkButton("Quit", theme, _actions.Quit));
-        Grid.SetColumn(buttons, 1);
-        grid.Children.Add(buttons);
-        border.Child = grid;
-        return border;
+        var identity = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        var version = _dashboard?.AppVersion is { Length: > 0 } value ? $"OpenUsage {value}" : "OpenUsage";
+        identity.Children.Add(Text(version, theme.TextSecondary, 11));
+        _footerStatus = Text("", theme.TextSecondary, 11);
+        _footerStatus.Cursor = Cursors.Hand;
+        _footerStatus.MouseLeftButtonUp += (_, e) =>
+        {
+            e.Handled = true;
+            if (!_refreshing)
+            {
+                _actions.RefreshNow();
+            }
+        };
+        identity.Children.Add(_footerStatus);
+        UpdateFooterStatus();
+        grid.Children.Add(identity);
+
+        if (!_showingSettings)
+        {
+            var label = new StackPanel { Orientation = Orientation.Horizontal };
+            label.Children.Add(Text("Options", theme.TextPrimary, 13, FontWeights.SemiBold, verticalAlignment: VerticalAlignment.Center));
+            label.Children.Add(Glyph(Glyphs.ChevronDown, theme.TextPrimary, 9, stroke: 1.8, margin: new Thickness(6, 1, 0, 0)));
+            FrameworkElement? options = null;
+            options = Capsule(label, theme, () => ShowMenu(options!, above: true, new MenuItemSpec[]
+            {
+                new("Settings", () => ShowScreen(settings: true)),
+                new("Open Log Folder", _actions.OpenLogFolder),
+                MenuItemSpec.Separator,
+                new("Quit OpenUsage", _actions.Quit),
+            }), new Thickness(14, 0, 12, 0));
+            Grid.SetColumn(options, 1);
+            grid.Children.Add(options);
+        }
+
+        return new Border
+        {
+            Background = theme.FooterFill,
+            BorderBrush = theme.Separator,
+            BorderThickness = new Thickness(0, 1, 0, 0),
+            CornerRadius = new CornerRadius(0, 0, 12, 12),
+            Padding = new Thickness(OuterPadding, 12, OuterPadding, 12),
+            Child = grid,
+        };
     }
 
-    private string StatusLine()
+    private void UpdateFooterStatus()
+    {
+        if (_footerStatus == null)
+        {
+            return;
+        }
+        _footerStatus.Text = FooterStatus(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>"Next update in 3m" (seconds under a minute), or "Updating…" while a refresh runs.</summary>
+    private string FooterStatus(DateTimeOffset now)
     {
         if (_refreshing)
         {
-            return "Updating usage…";
+            return "Updating…";
         }
         var newest = _dashboard?.Providers
             .Where(p => p.Enabled && p.RefreshedAt != null)
             .Select(p => p.RefreshedAt!.Value)
-            .DefaultIfEmpty(DateTimeOffset.MinValue)
-            .Max() ?? DateTimeOffset.MinValue;
-        if (newest == DateTimeOffset.MinValue)
+            .DefaultIfEmpty(now)
+            .Max() ?? now;
+        var remaining = newest + RefreshInterval - now;
+        var seconds = (int)Math.Ceiling(remaining.TotalSeconds);
+        if (seconds <= 0)
         {
-            return "";
+            // Due: the tray's next tick (at most a minute away while the panel is open) refreshes.
+            return "Updating…";
         }
-        var age = DateTimeOffset.UtcNow - newest;
-        if (age.TotalMinutes < 1)
-        {
-            return "Updated just now";
-        }
-        if (age.TotalHours < 1)
-        {
-            return $"Updated {(int)age.TotalMinutes}m ago";
-        }
-        return age.TotalDays < 1 ? $"Updated {(int)age.TotalHours}h ago" : $"Updated {(int)age.TotalDays}d ago";
-    }
-
-    private void BuildDashboard(StackPanel body, Theme theme)
-    {
-        if (_engineError != null)
-        {
-            body.Children.Add(Notice(_engineError, theme.Critical, theme, new Thickness(16, 4, 16, 8)));
-        }
-        if (_dashboard == null)
-        {
-            if (_engineError == null)
-            {
-                body.Children.Add(Text("Loading your usage…", theme.TextSecondary, 13, margin: new Thickness(16, 8, 16, 16)));
-            }
-            return;
-        }
-
-        var enabled = _dashboard.Providers.Where(p => p.Enabled).ToList();
-        if (enabled.Count == 0)
-        {
-            body.Children.Add(Text("No providers are turned on. Open Settings to choose which ones to show.",
-                theme.TextSecondary, 13, margin: new Thickness(16, 8, 16, 16), wrap: true));
-            return;
-        }
-        for (var index = 0; index < enabled.Count; index++)
-        {
-            if (index > 0)
-            {
-                body.Children.Add(new Border { Height = 1, Background = theme.Divider, Margin = new Thickness(16, 4, 16, 4) });
-            }
-            body.Children.Add(BuildProvider(enabled[index], theme));
-        }
-    }
-
-    private UIElement BuildProvider(ProviderInfo provider, Theme theme)
-    {
-        var panel = new StackPanel { Margin = new Thickness(16, 6, 16, 6) };
-
-        var header = new DockPanel { Margin = new Thickness(0, 0, 0, 4), LastChildFill = true };
-        if (ProviderMarks.For(provider.Id) is Geometry mark)
-        {
-            header.Children.Add(MarkIcon(mark, theme.TextSecondary, 16, new Thickness(0, 0, 8, 0)));
-        }
-        if (provider.Staleness != null)
-        {
-            var stale = Text("Outdated", theme.Warning, 11, verticalAlignment: VerticalAlignment.Center);
-            stale.ToolTip = provider.Staleness;
-            DockPanel.SetDock(stale, Dock.Right);
-            header.Children.Add(stale);
-        }
-        var name = new TextBlock { VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
-        name.Inlines.Add(new System.Windows.Documents.Run(provider.DisplayName)
-        {
-            FontWeight = FontWeights.SemiBold,
-            Foreground = theme.TextPrimary,
-        });
-        if (!string.IsNullOrEmpty(provider.Plan))
-        {
-            name.Inlines.Add(new System.Windows.Documents.Run("  " + provider.Plan)
-            {
-                Foreground = theme.TextSecondary,
-                FontSize = 12,
-            });
-        }
-        header.Children.Add(name);
-        panel.Children.Add(header);
-
-        if (provider.Notice != null)
-        {
-            panel.Children.Add(Notice(provider.Notice, provider.IsError ? theme.Critical : theme.Warning, theme,
-                new Thickness(0, 0, 0, 4)));
-        }
-
-        var expanded = _expandedProviders.Contains(provider.Id);
-        foreach (var row in provider.Rows.Where(r => expanded || !r.OnDemand))
-        {
-            panel.Children.Add(BuildRow(row, theme));
-        }
-
-        var hasMore = provider.Rows.Any(r => r.OnDemand);
-        if (hasMore || (expanded && provider.Links.Count > 0))
-        {
-            var actions = new WrapPanel { Margin = new Thickness(-6, 2, 0, 0) };
-            if (hasMore)
-            {
-                actions.Children.Add(LinkButton(expanded ? "Show Less" : "Show More", theme, () =>
-                {
-                    if (!_expandedProviders.Remove(provider.Id))
-                    {
-                        _expandedProviders.Add(provider.Id);
-                    }
-                    Render();
-                }, fontSize: 12));
-            }
-            if (expanded || !hasMore)
-            {
-                foreach (var link in provider.Links)
-                {
-                    actions.Children.Add(LinkButton(link.Label, theme, () => OpenUrl(link.Url), fontSize: 12));
-                }
-            }
-            panel.Children.Add(actions);
-        }
-        return panel;
-    }
-
-    private UIElement BuildRow(RowInfo row, Theme theme)
-    {
-        var panel = new StackPanel { Margin = new Thickness(0, 4, 0, 4) };
-        var top = new DockPanel { LastChildFill = true };
-        var headline = Text(row.Headline, row.HasData ? theme.TextPrimary : theme.TextSecondary, 13,
-            row.Kind == "meter" ? FontWeights.SemiBold : FontWeights.Normal);
-        headline.Margin = new Thickness(8, 0, 0, 0);
-        if (row.Note != null)
-        {
-            headline.ToolTip = row.Note;
-        }
-        DockPanel.SetDock(headline, Dock.Right);
-        top.Children.Add(headline);
-        top.Children.Add(Text(row.Title, theme.TextSecondary, 13, trim: true));
-        panel.Children.Add(top);
-
-        switch (row.Kind)
-        {
-            case "meter":
-                panel.Children.Add(new MeterBar(row.Fraction ?? 0, row.PaceTick, theme.Severity(row.Severity))
-                {
-                    Margin = new Thickness(0, 5, 0, 3),
-                    ToolTip = row.PaceTooltip,
-                });
-                if (row.Detail != null || row.PaceNote != null)
-                {
-                    var bottom = new DockPanel { LastChildFill = true };
-                    if (row.PaceNote != null)
-                    {
-                        var pace = Text(row.PaceNote,
-                            row.Severity == "critical" ? theme.Critical : theme.TextSecondary, 12);
-                        DockPanel.SetDock(pace, Dock.Right);
-                        bottom.Children.Add(pace);
-                    }
-                    bottom.Children.Add(Text(row.Detail ?? "", theme.TextSecondary, 12, trim: true));
-                    panel.Children.Add(bottom);
-                }
-                break;
-            case "chart" when row.Chart is { Count: > 0 } points:
-                var bars = new TrendBars(points.Select(p => p.Value).ToArray()) { Margin = new Thickness(0, 5, 0, 0) };
-                var latest = points[^1];
-                bars.ToolTip = $"{latest.Label}: {latest.Readout}";
-                panel.Children.Add(bars);
-                break;
-        }
-        return panel;
+        return seconds >= 60 ? $"Next update in {(int)Math.Ceiling(seconds / 60.0)}m" : $"Next update in {seconds}s";
     }
 }

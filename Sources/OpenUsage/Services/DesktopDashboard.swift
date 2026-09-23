@@ -7,9 +7,40 @@ import Foundation
 struct DesktopDashboard: Encodable {
     let schema = "openusage.desktop.v1"
     let generatedAt: Date
+    /// The engine's version, shown in the panel footer like the Mac app's.
+    let appVersion: String
     /// `left` or `used` — the global meter style the headlines were formatted with.
     let meterStyle: String
+    /// The cross-provider Total Spend card; `nil` when no enabled provider tracks spend.
+    let totalSpend: DesktopTotalSpend?
     let providers: [DesktopProvider]
+}
+
+/// The Mac dashboard's Total Spend ring (Cost metric), per period.
+struct DesktopTotalSpend: Encodable {
+    /// Display names of the providers the total can include, for the card's info note.
+    let providers: [String]
+    let periods: [DesktopSpendPeriod]
+}
+
+struct DesktopSpendPeriod: Encodable {
+    /// `today`, `yesterday`, or `last30`.
+    let id: String
+    /// The period switcher's label ("Today", "Yesterday", "30 Days").
+    let label: String
+    /// Ring center ("$463") and its unit line ("dollars").
+    let center: String
+    let unit: String
+    /// Contributing providers, largest first; empty when nothing was spent in the period.
+    let slices: [DesktopSpendSlice]
+}
+
+struct DesktopSpendSlice: Encodable {
+    let providerId: String
+    let displayName: String
+    let amount: Double
+    /// The legend's value ("$446.71").
+    let value: String
 }
 
 struct DesktopProvider: Encodable {
@@ -54,12 +85,16 @@ struct DesktopRow: Encodable {
     let paceTick: Double?
     /// Short pace copy shown on the row ("~8% spare", "Limit in 3h 45m", "Limit reached").
     let paceNote: String?
+    /// True when the pace note carries the severity-colored flame (spent or projected to run out).
+    let paceFlame: Bool
     /// Longer hover copy for the pace state ("~35% left at reset").
     let paceTooltip: String?
     /// The compact reading used for the tray icon tooltip ("58%", "$4.08").
     let compactValue: String
     let chart: [DesktopChartPoint]?
     let note: String?
+    /// Value rows' secondary line under the reading ("on-device estimate").
+    let subtitle: String?
 }
 
 struct DesktopChartPoint: Encodable {
@@ -109,9 +144,43 @@ enum DesktopDashboardBuilder {
         }
         return DesktopDashboard(
             generatedAt: now,
+            appVersion: AppInfo.version,
             meterStyle: store.meterStyle == .remaining ? "left" : "used",
+            totalSpend: totalSpend(session: session),
             providers: providers
         )
+    }
+
+    /// Same inputs as the Mac `TotalSpendCard`: enabled providers that ship the local spend tiles, in
+    /// display order, summed by `TotalSpendAggregator` under the default Cost metric.
+    private static func totalSpend(session: EngineSession) -> DesktopTotalSpend? {
+        let capableIDs = Set(session.registry.descriptors.filter(\.isSpendTile).map(\.providerID))
+        let providers = session.orderedProviderIDs.compactMap { id -> Provider? in
+            guard capableIDs.contains(id), session.enablement.isEnabled(id) else { return nil }
+            return session.registry.provider(id: id)
+        }
+        guard !providers.isEmpty else { return nil }
+        let periods = TotalSpendPeriod.allCases.map { period -> DesktopSpendPeriod in
+            let projection = TotalSpendAggregator
+                .total(for: period, providers: providers, snapshots: session.dataStore.snapshots)
+                .projection(for: .cost)
+            let center = MetricFormatter.totalSpendRingCenter(projection.centerValue, metric: .cost)
+            return DesktopSpendPeriod(
+                id: period == .today ? "today" : period == .yesterday ? "yesterday" : "last30",
+                label: period.shortLabel,
+                center: center.primary,
+                unit: center.unit,
+                slices: projection.slices.map { slice in
+                    DesktopSpendSlice(
+                        providerId: slice.provider.id,
+                        displayName: slice.provider.displayName,
+                        amount: slice.displayAmount,
+                        value: MetricFormatter.number(slice.displayAmount, kind: .dollars, style: .full)
+                    )
+                }
+            )
+        }
+        return DesktopTotalSpend(providers: providers.map(\.displayName), periods: periods)
     }
 
     /// A provider always keeps at least one Always Visible row: when every row is On Demand, all of
@@ -142,10 +211,12 @@ enum DesktopDashboardBuilder {
                 severity: nil,
                 paceTick: nil,
                 paceNote: nil,
+                paceFlame: false,
                 paceTooltip: nil,
                 compactValue: "",
                 chart: data.chartPoints.map { DesktopChartPoint(label: $0.label, value: $0.value, readout: $0.readout) },
-                note: data.chartNote
+                note: data.chartNote,
+                subtitle: nil
             )
         }
         if data.isBounded {
@@ -163,10 +234,12 @@ enum DesktopDashboardBuilder {
                 severity: severityName(state.severity),
                 paceTick: data.paceTick(for: state, now: now),
                 paceNote: paceNote(state, alwaysShowPacing: data.alwaysShowPacing),
+                paceFlame: hasFlame(state),
                 paceTooltip: state.tooltip,
                 compactValue: data.menuBarValue,
                 chart: nil,
-                note: data.infoNote
+                note: data.infoNote,
+                subtitle: nil
             )
         }
         return DesktopRow(
@@ -182,10 +255,12 @@ enum DesktopDashboardBuilder {
             severity: nil,
             paceTick: nil,
             paceNote: nil,
+            paceFlame: false,
             paceTooltip: nil,
             compactValue: data.menuBarValue,
             chart: nil,
-            note: data.infoNote ?? data.valueTooltipNote
+            note: data.infoNote ?? data.valueTooltipNote,
+            subtitle: data.unboundedSubtitle
         )
     }
 
@@ -195,6 +270,13 @@ enum DesktopDashboardBuilder {
         case .normal: "normal"
         case .warning: "warning"
         case .critical: "critical"
+        }
+    }
+
+    private static func hasFlame(_ state: WidgetData.MeterState) -> Bool {
+        switch state {
+        case .spent, .runningOut: true
+        default: false
         }
     }
 
@@ -214,8 +296,8 @@ private extension DesktopRow {
         DesktopRow(
             id: id, title: title, kind: kind, hasData: hasData, onDemand: onDemand, pinned: pinned,
             headline: headline, detail: detail, fraction: fraction, severity: severity,
-            paceTick: paceTick, paceNote: paceNote, paceTooltip: paceTooltip,
-            compactValue: compactValue, chart: chart, note: note
+            paceTick: paceTick, paceNote: paceNote, paceFlame: paceFlame, paceTooltip: paceTooltip,
+            compactValue: compactValue, chart: chart, note: note, subtitle: subtitle
         )
     }
 }
