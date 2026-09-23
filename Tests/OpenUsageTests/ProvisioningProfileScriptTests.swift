@@ -2,6 +2,12 @@ import Foundation
 import XCTest
 
 final class ProvisioningProfileScriptTests: XCTestCase {
+    override func setUpWithError() throws {
+        #if os(Windows)
+        throw XCTSkip("The provisioning-profile matcher is a bash script for the macOS release; Windows has no /bin/bash.")
+        #endif
+    }
+
     func testProfileMatcherAcceptsBareAndMatchingTeamPrefixedUbiquityIdentifiers() throws {
         XCTAssertTrue(try matches(containerID: "iCloud.com.robinebers.openusage.dev"))
         XCTAssertTrue(try matches(containerID: "TEAM123.iCloud.com.robinebers.openusage.dev"))

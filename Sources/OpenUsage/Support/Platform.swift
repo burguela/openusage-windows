@@ -28,7 +28,7 @@ enum Platform {
     #endif
 
     /// Resolve a helper executable. An absolute path is used as-is; a bare name is looked up next to
-    /// the running executable first (the Windows build ships `sqlite3.exe` beside `openusage.exe`),
+    /// the running executable first (the Windows build ships `sqlite3.exe` beside the engine),
     /// then on `PATH`. `nil` when nothing usable is found, so callers can fail loudly with context.
     static func findExecutable(_ name: String) -> URL? {
         if isAbsolutePath(name) {
@@ -216,6 +216,42 @@ enum Platform {
             [.posixPermissions: isDirectory ? 0o700 : 0o600],
             ofItemAtPath: path
         )
+        #endif
+    }
+
+    // MARK: - Directory timestamps
+
+    /// Set a directory's modification date. On Windows, Foundation's `setAttributes(.modificationDate)`
+    /// opens the item without `FILE_FLAG_BACKUP_SEMANTICS`, which fails with access denied for a
+    /// directory, so Windows goes through `SetFileTime` directly.
+    static func setDirectoryModificationDate(_ date: Date, atPath path: String) throws {
+        #if os(Windows)
+        let handle = path.withCString(encodedAs: UTF16.self) { path in
+            CreateFileW(
+                path,
+                DWORD(FILE_WRITE_ATTRIBUTES),
+                DWORD(FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE),
+                nil,
+                DWORD(OPEN_EXISTING),
+                DWORD(FILE_FLAG_BACKUP_SEMANTICS),
+                nil
+            )
+        }
+        guard let handle, handle != INVALID_HANDLE_VALUE else {
+            throw windowsError("CreateFileW")
+        }
+        defer { CloseHandle(handle) }
+        // FILETIME counts 100-nanosecond intervals since 1601-01-01.
+        let intervals = UInt64((date.timeIntervalSince1970 + 11_644_473_600) * 10_000_000)
+        var time = FILETIME(
+            dwLowDateTime: DWORD(truncatingIfNeeded: intervals),
+            dwHighDateTime: DWORD(truncatingIfNeeded: intervals >> 32)
+        )
+        guard SetFileTime(handle, nil, nil, &time) else {
+            throw windowsError("SetFileTime")
+        }
+        #else
+        try FileManager.default.setAttributes([.modificationDate: date], ofItemAtPath: path)
         #endif
     }
 }

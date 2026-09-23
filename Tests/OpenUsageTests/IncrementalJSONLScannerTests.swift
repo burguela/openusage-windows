@@ -234,7 +234,7 @@ final class IncrementalJSONLScannerTests: XCTestCase {
             identity: "old-home"
         )
         let old = Date().addingTimeInterval(-JSONLScanCachePaths.staleIdentityRetention - 60)
-        try FileManager.default.setAttributes([.modificationDate: old], ofItemAtPath: identityDirectory.path)
+        try Platform.setDirectoryModificationDate(old, atPath: identityDirectory.path)
         await JSONLScanCacheWriter.shared.pruneStaleIdentities(
             persistence: persistence,
             before: Date().addingTimeInterval(-JSONLScanCachePaths.staleIdentityRetention)

@@ -559,7 +559,7 @@ final class ClaudeLogUsageScannerTests: XCTestCase {
             "workspace/\(unindexed).jsonl": line(unindexed, input: 6000, output: 500, cost: 14),
             "workspace/not-a-uuid.jsonl": line("not-a-uuid", input: 7000, output: 500, cost: 15)
         ])
-        let desktopRoot = home.appendingPathComponent("Library/Application Support/Claude/claude-code-sessions")
+        let desktopRoot = home.appendingPathComponent("\(ClaudeDesktopAuthStore.userDataRelativePath)/claude-code-sessions")
 
         func index(_ sessionID: String, account: String, organization: String) throws -> URL {
             let directory = desktopRoot.appendingPathComponent(account).appendingPathComponent(organization)
@@ -600,7 +600,7 @@ final class ClaudeLogUsageScannerTests: XCTestCase {
             )
         ])
         let directory = home.appendingPathComponent(
-            "Library/Application Support/Claude/claude-code-sessions/user-a/org-a"
+            "\(ClaudeDesktopAuthStore.userDataRelativePath)/claude-code-sessions/user-a/org-a"
         )
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         try #"{"cliSessionId":"\#(sessionID)"}"#
@@ -683,7 +683,7 @@ final class ClaudeLogUsageScannerTests: XCTestCase {
                 line("team", input: 2000, cost: 20),
         ])
         let indexDirectory = home.appendingPathComponent(
-            "Library/Application Support/Claude/claude-code-sessions/user-a/org-team"
+            "\(ClaudeDesktopAuthStore.userDataRelativePath)/claude-code-sessions/user-a/org-team"
         )
         try FileManager.default.createDirectory(at: indexDirectory, withIntermediateDirectories: true)
         try #"{"cliSessionId":"\#(desktop)"}"#

@@ -300,10 +300,7 @@ actor JSONLScanCacheWriter {
                 }
             }
             do {
-                try FileManager.default.setAttributes(
-                    [.modificationDate: Date()],
-                    ofItemAtPath: identityDirectory.path
-                )
+                try Platform.setDirectoryModificationDate(Date(), atPath: identityDirectory.path)
             } catch {
                 AppLog.warn(
                     .cache,

@@ -80,11 +80,8 @@ jobs:
           if-no-files-found: error
 
   engine-tests-windows:
-    # Informational until the suite has been triaged on Windows: many tests were written against
-    # POSIX paths. Failures here show what still needs porting; they don't block the build above.
-    name: Engine Tests (Windows, Informational)
+    name: Engine Tests (Windows)
     runs-on: windows-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -93,6 +90,8 @@ jobs:
         with:
           branch: swift-6.2-release
           tag: 6.2-RELEASE
+      - name: Install tools the providers shell out to
+        run: choco install sqlite --no-progress -y
       - run: swift test ${{ env.STL_MISMATCH }}
 
   engine-linux:

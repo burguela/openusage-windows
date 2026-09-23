@@ -127,7 +127,7 @@ struct SQLiteCLIAccessor: SQLiteAccessing {
     }
 
     /// macOS ships the `sqlite3` shell in `/usr/bin`. Windows doesn't, so the Windows build bundles
-    /// `sqlite3.exe` next to `openusage.exe`; `SystemProcessRunner` resolves the bare name there (then
+    /// `sqlite3.exe` next to the engine; `SystemProcessRunner` resolves the bare name there (then
     /// on `PATH`). Linux distributions put it on `PATH`.
     #if os(macOS)
     static let sqliteExecutable = "/usr/bin/sqlite3"

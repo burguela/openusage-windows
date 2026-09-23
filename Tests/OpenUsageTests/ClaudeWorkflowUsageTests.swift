@@ -70,7 +70,7 @@ final class ClaudeWorkflowUsageTests: XCTestCase {
             )
         ])
         defer { try? FileManager.default.removeItem(at: home) }
-        let directory = home.appendingPathComponent("Library/Application Support/Claude/claude-code-sessions/user-a/org-a")
+        let directory = home.appendingPathComponent("\(ClaudeDesktopAuthStore.userDataRelativePath)/claude-code-sessions/user-a/org-a")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         try #"{"cliSessionId":"\#(session)"}"#
             .write(to: directory.appendingPathComponent("local_session.json"), atomically: true, encoding: .utf8)

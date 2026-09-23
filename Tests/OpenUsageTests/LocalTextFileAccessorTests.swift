@@ -33,6 +33,11 @@ final class LocalTextFileAccessorTests: XCTestCase {
     }
 
     func testOverwriteTightensExistingPermissiveFile() throws {
+        #if os(Windows)
+        // Windows files have ACLs, not POSIX modes: Foundation can only toggle read-only there, so a
+        // permissive 0644 file can't be set up to begin with.
+        throw XCTSkip("POSIX permission bits don't exist on Windows.")
+        #endif
         let file = temporaryDirectory.appendingPathComponent("api-key")
         try FileManager.default.createDirectory(at: temporaryDirectory, withIntermediateDirectories: true)
         try "old-key".write(to: file, atomically: false, encoding: .utf8)
