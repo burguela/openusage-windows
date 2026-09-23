@@ -5,13 +5,13 @@ import Foundation
 /// digits) before parsing.
 enum OpenUsageISO8601 {
     static func string(from date: Date) -> String {
-        formatter(fractionalSeconds: true).string(from: date)
+        fractionalFormatter.with { $0.string(from: date) }
     }
 
     static func date(from value: String) -> Date? {
         let normalized = normalizeTimestamp(value)
-        return formatter(fractionalSeconds: true).date(from: normalized) ??
-        formatter(fractionalSeconds: false).date(from: normalized)
+        return fractionalFormatter.with { $0.date(from: normalized) } ??
+        plainFormatter.with { $0.date(from: normalized) }
     }
 
     /// Aligns with the JavaScript plugin `ctx.util.toIso` string normalization (Claude `resets_at`, etc.).
@@ -73,15 +73,10 @@ enum OpenUsageISO8601 {
     }
 
     // ISO8601DateFormatter is expensive to construct and is hit on every snapshot decode and local-API
-    // encode, so the two fixed configurations are built once. `ISO8601DateFormatter` is thread-safe for
-    // parsing/formatting, and parsing here runs on the main-actor refresh path; `nonisolated(unsafe)`
-    // shares the immutable instances without per-call allocation.
-    private nonisolated(unsafe) static let fractionalFormatter = makeFormatter(fractionalSeconds: true)
-    private nonisolated(unsafe) static let plainFormatter = makeFormatter(fractionalSeconds: false)
-
-    private static func formatter(fractionalSeconds: Bool) -> ISO8601DateFormatter {
-        fractionalSeconds ? fractionalFormatter : plainFormatter
-    }
+    // encode, so the two fixed configurations are built once and shared (`SharedFormatter` serializes
+    // them where Foundation's formatters aren't thread-safe).
+    private static let fractionalFormatter = SharedFormatter(makeFormatter(fractionalSeconds: true))
+    private static let plainFormatter = SharedFormatter(makeFormatter(fractionalSeconds: false))
 
     private static func makeFormatter(fractionalSeconds: Bool) -> ISO8601DateFormatter {
         let formatter = ISO8601DateFormatter()
