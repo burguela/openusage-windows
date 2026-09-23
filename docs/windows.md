@@ -80,8 +80,9 @@ The `Windows` GitHub Actions workflow (`.github/workflows/windows.yml`) builds e
 `windows-latest` and uploads the folder as the `OpenUsage-windows-x64` artifact. To build locally:
 
 ```powershell
-# Swift 6.2 for Windows and the .NET 8 SDK installed
-swift build -c release --product openusage-cli
+# Swift 6.2 for Windows and the .NET 8 SDK installed. The -D flags let Swift 6.2's Clang use a newer
+# Visual Studio C++ library; drop them if your Visual Studio matches the toolchain.
+swift build -c release --product openusage-cli -Xcc -D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH -Xcxx -D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH
 dotnet publish windows/OpenUsage.Windows/OpenUsage.Windows.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o dist/OpenUsage
 windows/scripts/package.ps1 -BuildDir .build/release -OutDir dist/OpenUsage
 dist/OpenUsage/OpenUsage.exe

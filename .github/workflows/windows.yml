@@ -10,6 +10,12 @@ on:
 permissions:
   contents: read
 
+env:
+  # The runner's Visual Studio ships an MSVC STL that asks for Clang 20+, newer than the Clang inside
+  # the Swift 6.2 toolchain. swift-crypto's BoringSSL is the only C++ in the build and compiles fine
+  # with it, so allow the mismatch rather than pinning an older Visual Studio.
+  STL_MISMATCH: -Xcc -D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH -Xcxx -D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH
+
 jobs:
   windows:
     name: Build Windows App
@@ -26,7 +32,7 @@ jobs:
           tag: 6.2-RELEASE
 
       - name: Build engine
-        run: swift build -c release --product openusage-cli
+        run: swift build -c release --product openusage-cli ${{ env.STL_MISMATCH }}
 
       - name: Smoke-test engine
         shell: pwsh
@@ -72,7 +78,7 @@ jobs:
         with:
           branch: swift-6.2-release
           tag: 6.2-RELEASE
-      - run: swift test
+      - run: swift test ${{ env.STL_MISMATCH }}
 
   engine-linux:
     # Keeps the engine portable: the same non-Apple code paths Windows uses, on Linux.
