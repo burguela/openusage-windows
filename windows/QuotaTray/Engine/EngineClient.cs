@@ -5,9 +5,9 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using OpenUsage.Windows.Services;
+using QuotaTray.Services;
 
-namespace OpenUsage.Windows.Engine;
+namespace QuotaTray.Engine;
 
 public enum RefreshMode
 {
@@ -31,9 +31,8 @@ public sealed class EngineException : Exception
 /// </summary>
 public sealed class EngineClient
 {
-    // Not "openusage.exe": Windows file names are case-insensitive, so it would collide with
-    // this app's own OpenUsage.exe in the same folder.
-    private const string EngineFileName = "openusage-cli.exe";
+    // The shared Swift engine (the `openusage-cli` product), renamed when packaged.
+    private const string EngineFileName = "quotatray-engine.exe";
     // A forced refresh can legitimately take up to the engine's own two-minute per-provider deadline.
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(180);
 
@@ -52,12 +51,12 @@ public sealed class EngineClient
     }
 
     /// <summary>
-    /// The engine ships beside OpenUsage.exe. <c>OPENUSAGE_ENGINE</c> overrides the path for
+    /// The engine ships beside QuotaTray.exe. <c>QUOTATRAY_ENGINE</c> overrides the path for
     /// development builds that keep the two in separate folders.
     /// </summary>
     public static EngineClient Locate()
     {
-        var overridePath = Environment.GetEnvironmentVariable("OPENUSAGE_ENGINE");
+        var overridePath = Environment.GetEnvironmentVariable("QUOTATRAY_ENGINE");
         if (!string.IsNullOrWhiteSpace(overridePath))
         {
             return new EngineClient(overridePath);
@@ -113,7 +112,7 @@ public sealed class EngineClient
     {
         if (!File.Exists(ExecutablePath))
         {
-            throw new EngineException($"OpenUsage's engine is missing: {ExecutablePath}");
+            throw new EngineException($"Quota Tray's engine is missing: {ExecutablePath}");
         }
 
         await _gate.WaitAsync().ConfigureAwait(false);
@@ -142,7 +141,7 @@ public sealed class EngineClient
             }
             catch (Exception error)
             {
-                throw new EngineException($"OpenUsage's engine could not start: {error.Message}", error);
+                throw new EngineException($"Quota Tray's engine could not start: {error.Message}", error);
             }
 
             var stdout = process.StandardOutput.ReadToEndAsync();
@@ -155,7 +154,7 @@ public sealed class EngineClient
             catch (OperationCanceledException)
             {
                 try { process.Kill(entireProcessTree: true); } catch (InvalidOperationException) { }
-                throw new EngineException($"OpenUsage's engine did not finish within {Timeout.TotalSeconds:0} seconds.");
+                throw new EngineException($"Quota Tray's engine did not finish within {Timeout.TotalSeconds:0} seconds.");
             }
 
             var output = await stdout.ConfigureAwait(false);
@@ -165,7 +164,7 @@ public sealed class EngineClient
             {
                 throw new EngineException(errors.Length > 0
                     ? errors.Replace("openusage: ", "", StringComparison.Ordinal)
-                    : $"OpenUsage's engine failed (exit code {process.ExitCode}).");
+                    : $"Quota Tray's engine failed (exit code {process.ExitCode}).");
             }
             if (errors.Length > 0)
             {

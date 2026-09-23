@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace OpenUsage.Windows.Engine;
+namespace QuotaTray.Engine;
 
 // The `openusage.desktop.v1` document printed by `openusage dashboard` (see
 // Sources/OpenUsage/Services/DesktopDashboard.swift). Every string arrives formatted by the shared

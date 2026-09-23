@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using OpenUsage.Windows.Engine;
-using OpenUsage.Windows.Services;
-using OpenUsage.Windows.Views;
+using QuotaTray.Engine;
+using QuotaTray.Services;
+using QuotaTray.Views;
 using Forms = System.Windows.Forms;
 
-namespace OpenUsage.Windows.Tray;
+namespace QuotaTray.Tray;
 
 /// <summary>
 /// Owns the notification-area icon, its menu, the popup, and the refresh schedule. All engine work
@@ -51,7 +51,7 @@ public sealed class TrayController : IPopupActions, IDisposable
         _launchAtLoginItem = new Forms.ToolStripMenuItem("Launch at Login", null, (_, _) =>
             SetLaunchAtLogin(!LaunchAtLogin.IsEnabled));
         var menu = new Forms.ContextMenuStrip();
-        var open = new Forms.ToolStripMenuItem("Open OpenUsage", null, (_, _) => _popup.ShowNearTray());
+        var open = new Forms.ToolStripMenuItem("Open Quota Tray", null, (_, _) => _popup.ShowNearTray());
         open.Font = new System.Drawing.Font(open.Font, System.Drawing.FontStyle.Bold);
         menu.Items.Add(open);
         menu.Items.Add(new Forms.ToolStripMenuItem("Refresh Now", null, (_, _) => RefreshNow()));
@@ -60,13 +60,13 @@ public sealed class TrayController : IPopupActions, IDisposable
         menu.Items.Add(_launchAtLoginItem);
         menu.Items.Add(new Forms.ToolStripMenuItem("Open Log Folder", null, (_, _) => OpenLogFolder()));
         menu.Items.Add(new Forms.ToolStripSeparator());
-        menu.Items.Add(new Forms.ToolStripMenuItem("Quit OpenUsage", null, (_, _) => Quit()));
+        menu.Items.Add(new Forms.ToolStripMenuItem("Quit Quota Tray", null, (_, _) => Quit()));
         menu.Opening += (_, _) => _launchAtLoginItem.Checked = SafeLaunchAtLoginState();
 
         _notifyIcon = new Forms.NotifyIcon
         {
             Icon = _iconRenderer.AppIcon,
-            Text = "OpenUsage",
+            Text = "Quota Tray",
             ContextMenuStrip = menu,
         };
         _notifyIcon.MouseClick += OnIconClick;
@@ -179,10 +179,10 @@ public sealed class TrayController : IPopupActions, IDisposable
         _notifyIcon.Text = Tooltip(_dashboard, error);
     }
 
-    /// <summary>"OpenUsage" plus the pinned readings, e.g. "Claude: Session 58% · Weekly 40%".</summary>
+    /// <summary>"Quota Tray" plus the pinned readings, e.g. "Claude: Session 58% · Weekly 40%".</summary>
     private static string Tooltip(Dashboard? dashboard, string? error)
     {
-        var text = new StringBuilder("OpenUsage");
+        var text = new StringBuilder("Quota Tray");
         if (error != null)
         {
             text.Append("\nCouldn't Refresh");
@@ -236,7 +236,7 @@ public sealed class TrayController : IPopupActions, IDisposable
         catch (Exception error)
         {
             AppLog.Error($"launch at login change failed: {error}");
-            ShowError("OpenUsage couldn't change Launch at Login.");
+            ShowError("Quota Tray couldn't change Launch at Login.");
         }
         _popup.Update(null, _engineError, _refreshing);
     }
@@ -251,7 +251,7 @@ public sealed class TrayController : IPopupActions, IDisposable
         catch (Exception error)
         {
             AppLog.Error($"open log folder failed: {error}");
-            ShowError($"OpenUsage couldn't open {AppLog.Directory}.");
+            ShowError($"Quota Tray couldn't open {AppLog.Directory}.");
         }
     }
 
@@ -276,7 +276,7 @@ public sealed class TrayController : IPopupActions, IDisposable
     {
         if (!_disposed)
         {
-            _notifyIcon.ShowBalloonTip(5000, "OpenUsage", message, Forms.ToolTipIcon.Warning);
+            _notifyIcon.ShowBalloonTip(5000, "Quota Tray", message, Forms.ToolTipIcon.Warning);
         }
     }
 

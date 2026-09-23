@@ -3,17 +3,17 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Win32;
-using OpenUsage.Windows.Services;
-using OpenUsage.Windows.Tray;
+using QuotaTray.Services;
+using QuotaTray.Tray;
 
-namespace OpenUsage.Windows;
+namespace QuotaTray;
 
 /// <summary>
 /// Entry point: one instance per user session, living in the notification area until Quit.
 /// </summary>
 public partial class App : Application
 {
-    private const string SingleInstanceName = @"Local\OpenUsage.Windows.Tray";
+    private const string SingleInstanceName = @"Local\QuotaTray.Tray";
 
     private Mutex? _singleInstance;
     private TrayController? _tray;
@@ -40,7 +40,7 @@ public partial class App : Application
         if (!createdNew)
         {
             // Already running: its icon is in the notification area (possibly in the overflow).
-            AppLog.Info("second launch ignored: OpenUsage is already running");
+            AppLog.Info("second launch ignored: Quota Tray is already running");
             _singleInstance.Dispose();
             _singleInstance = null;
             Shutdown();
@@ -51,7 +51,7 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
             AppLog.Error($"unhandled exception: {args.ExceptionObject}");
 
-        AppLog.Info($"OpenUsage for Windows starting ({Environment.OSVersion})");
+        AppLog.Info($"Quota Tray starting ({Environment.OSVersion})");
         try
         {
             LaunchAtLogin.RepairPathIfEnabled();
@@ -72,7 +72,7 @@ public partial class App : Application
         _tray?.Dispose();
         _singleInstance?.ReleaseMutex();
         _singleInstance?.Dispose();
-        AppLog.Info("OpenUsage for Windows exited");
+        AppLog.Info("Quota Tray exited");
         base.OnExit(e);
     }
 
@@ -89,7 +89,7 @@ public partial class App : Application
     {
         // Log loudly, tell the user once, and keep the tray alive rather than vanishing silently.
         AppLog.Error($"unhandled UI exception: {e.Exception}");
-        _tray?.ShowError("OpenUsage hit an unexpected error. Details are in the log folder.");
+        _tray?.ShowError("Quota Tray hit an unexpected error. Details are in the log folder.");
         e.Handled = true;
     }
 }

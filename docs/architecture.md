@@ -110,7 +110,8 @@ private atomic writes, helper lookup, the app-data folder); the Keychain maps to
 Manager (`Services/WindowsCredentialStore.swift`); and crypto comes from `swift-crypto` where CryptoKit
 isn't available.
 
-The Windows front end is a separate .NET tray app in `windows/`. It runs the CLI's desktop commands
+The Windows front end is Quota Tray, a separate .NET tray app in `windows/QuotaTray/` (this fork's
+Windows app, named apart from OpenUsage per the [trademark policy](../TRADEMARK.md)). It runs the CLI's desktop commands
 (`Services/DesktopHost.swift`) and renders the `openusage.desktop.v1` document they print, so formatting,
 pacing, and provider rules stay in Swift. See [Windows](windows.md).
 

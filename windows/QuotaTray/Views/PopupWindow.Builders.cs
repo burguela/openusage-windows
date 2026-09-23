@@ -6,9 +6,9 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
-using OpenUsage.Windows.Services;
+using QuotaTray.Services;
 
-namespace OpenUsage.Windows.Views;
+namespace QuotaTray.Views;
 
 /// <summary>One entry of the panel's pop-up menus; a null label is a separator.</summary>
 public sealed record MenuItemSpec(string? Label, Action? Action, bool IsChecked = false)
@@ -227,7 +227,7 @@ public partial class PopupWindow
         catch (Exception error) when (error is System.ComponentModel.Win32Exception or InvalidOperationException)
         {
             AppLog.Error($"could not open link: {error.Message}");
-            MessageBox.Show($"OpenUsage couldn't open {url}.", "OpenUsage", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"Quota Tray couldn't open {url}.", "Quota Tray", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 }

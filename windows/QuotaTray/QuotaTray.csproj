@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    OpenUsage for Windows: a notification-area (tray) app. All provider logic lives in the shared
-    Swift engine (`openusage.exe`, built from this repository's `OpenUsageCLI` target); this app runs
-    it and renders the display-ready dashboard it prints. See docs/windows.md.
+    Quota Tray: a Windows notification-area (tray) app from an unofficial fork of OpenUsage
+    (https://github.com/robinebers/openusage). All provider logic lives in the shared Swift engine
+    (`quotatray-engine.exe`, built from this repository's `OpenUsageCLI` target); this app runs it and
+    renders the display-ready dashboard it prints. See docs/windows.md.
   -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -17,12 +18,14 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-    <AssemblyName>OpenUsage</AssemblyName>
-    <RootNamespace>OpenUsage.Windows</RootNamespace>
-    <ApplicationIcon>Assets\OpenUsage.ico</ApplicationIcon>
+    <AssemblyName>QuotaTray</AssemblyName>
+    <RootNamespace>QuotaTray</RootNamespace>
+    <ApplicationIcon>Assets\QuotaTray.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Product>OpenUsage</Product>
-    <Company>OpenUsage</Company>
+    <Product>Quota Tray</Product>
+    <Company>Quota Tray</Company>
+    <Description>Quota Tray, an unofficial Windows fork of OpenUsage</Description>
+    <Copyright>MIT License. Copyright (c) 2026 Robin Ebers and contributors</Copyright>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!--
       WFAC010 asks Windows Forms apps to set DPI awareness in code instead of the manifest. This is a
@@ -33,7 +36,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Assets\OpenUsage.ico" LogicalName="OpenUsage.ico" />
+    <EmbeddedResource Include="Assets\QuotaTray.ico" LogicalName="QuotaTray.ico" />
     <EmbeddedResource Include="Assets\provider-marks.json" LogicalName="provider-marks.json" />
   </ItemGroup>
 

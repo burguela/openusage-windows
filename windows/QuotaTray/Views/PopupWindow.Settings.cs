@@ -1,9 +1,9 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
-using OpenUsage.Windows.Services;
+using QuotaTray.Services;
 
-namespace OpenUsage.Windows.Views;
+namespace QuotaTray.Views;
 
 // The Settings screen: captioned sections over grouped cards of rows, like the Mac SettingsScreen.
 // Providers get their own section here because Windows has no Customize screen.
@@ -50,10 +50,21 @@ public partial class PopupWindow
             }
         }
 
-        var advanced = Section("Advanced", theme, body, last: true);
+        var advanced = Section("Advanced", theme, body);
         advanced.Children.Add(SettingsRow("Log Files",
             SmallButton(Text("Open Folder", theme.TextPrimary, SupportingSize, FontWeights.Medium), theme, _actions.OpenLogFolder), theme));
+
+        // Credit where it's due: Quota Tray is an unofficial fork of OpenUsage (MIT).
+        var about = Section("About", theme, body, last: true);
+        var credit = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        credit.Children.Add(Text("Based on OpenUsage", theme.TextPrimary, 13));
+        credit.Children.Add(Text("By Robin Ebers and contributors. Unofficial fork.", theme.TextSecondary, 11));
+        about.Children.Add(SettingsRow(credit,
+            SmallButton(Text("View Original", theme.TextPrimary, SupportingSize, FontWeights.Medium), theme,
+                () => OpenUrl(OriginalProjectUrl)), theme));
     }
+
+    private const string OriginalProjectUrl = "https://github.com/robinebers/openusage";
 
     /// <summary>A caption over a grouped card; returns the card's row stack.</summary>
     private static StackPanel Section(string title, Theme theme, StackPanel body, bool last = false)

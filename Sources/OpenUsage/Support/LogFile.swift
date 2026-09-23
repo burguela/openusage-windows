@@ -19,7 +19,16 @@ final class LogFile: @unchecked Sendable {
     /// `~/Library/Logs/OpenUsage/OpenUsage.log` via `FileManager`, never hardcoded from `$HOME`; the
     /// `Logs/OpenUsage` subfolder is a literal (not bundle-id-keyed), so the dev and release builds
     /// agree on the same file — acceptable since they are separate builds.
-    static let shared = LogFile(directory: defaultDirectory(), fileName: "OpenUsage.log")
+    static let shared = LogFile(directory: defaultDirectory(), fileName: defaultFileName)
+
+    /// On Windows the engine's log sits beside the tray app's own `QuotaTray.log`, so it's named for its role.
+    static var defaultFileName: String {
+        #if os(Windows)
+        "Engine.log"
+        #else
+        "OpenUsage.log"
+        #endif
+    }
 
     /// The advertised log path (logged at startup, copied/revealed from Settings). Derived from the
     /// shared sink so the path shown to the user always equals where logs are actually written.
@@ -64,8 +73,8 @@ final class LogFile: @unchecked Sendable {
             ?? FileManager.default.temporaryDirectory
         return library.appendingPathComponent("Logs/OpenUsage", isDirectory: true)
         #else
-        // Windows: `%LOCALAPPDATA%\OpenUsage\Logs`, next to the rest of OpenUsage's local state.
-        return Platform.appDataDirectory.appendingPathComponent("OpenUsage/Logs", isDirectory: true)
+        // Windows: `%LOCALAPPDATA%\QuotaTray\Logs`, next to the rest of the app's local state.
+        return Platform.appDataDirectory.appendingPathComponent("\(Platform.appFolderName)/Logs", isDirectory: true)
         #endif
     }
 

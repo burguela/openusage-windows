@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Win32;
 
-namespace OpenUsage.Windows.Services;
+namespace QuotaTray.Services;
 
 /// <summary>
 /// Launch at Login through the per-user <c>Run</c> key, the same place Windows' Startup apps
@@ -10,7 +10,7 @@ namespace OpenUsage.Windows.Services;
 public static class LaunchAtLogin
 {
     private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    private const string ValueName = "OpenUsage";
+    private const string ValueName = "QuotaTray";
 
     private static string Command => $"\"{Environment.ProcessPath}\"";
 

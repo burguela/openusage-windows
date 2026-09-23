@@ -6,10 +6,10 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
-using OpenUsage.Windows.Engine;
-using OpenUsage.Windows.Services;
+using QuotaTray.Engine;
+using QuotaTray.Services;
 
-namespace OpenUsage.Windows.Views;
+namespace QuotaTray.Views;
 
 // The dashboard screen: Total Spend, then a header and grouped card per provider (the Mac
 // DashboardContentView, WidgetGroupedListView, and WidgetRowView layouts).

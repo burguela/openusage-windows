@@ -6,14 +6,14 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using OpenUsage.Windows.Engine;
-using OpenUsage.Windows.Services;
-using OpenUsage.Windows.Views;
+using QuotaTray.Engine;
+using QuotaTray.Services;
+using QuotaTray.Views;
 
-namespace OpenUsage.Windows.Preview;
+namespace QuotaTray.Preview;
 
 /// <summary>
-/// <c>OpenUsage.exe --render-preview dashboard.json out-folder</c>: renders the panel (dashboard and
+/// <c>QuotaTray.exe --render-preview dashboard.json out-folder</c>: renders the panel (dashboard and
 /// Settings, light and dark) to PNGs from a saved dashboard document, without the tray or the engine.
 /// CI uses it to publish screenshots of the Windows UI.
 /// </summary>

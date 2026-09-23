@@ -1,7 +1,7 @@
 # Contributing to OpenUsage
 
 > **About this fork:** [openusage-windows](https://github.com/burguela/openusage-windows) is an unofficial
-> fork that adds a Windows app. For the Windows app (`windows/`, the Windows workflow, and Windows-only
+> fork that adds Quota Tray, a Windows app. For Quota Tray (`windows/`, the Windows workflow, and Windows-only
 > code paths), open issues and pull requests in [this fork](https://github.com/burguela/openusage-windows/issues);
 > the rules below don't apply there. Changes to the shared code that would help the Mac app too are best sent
 > to the [original project](https://github.com/robinebers/openusage), under the rules below, which are the

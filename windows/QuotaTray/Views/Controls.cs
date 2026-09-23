@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using OpenUsage.Windows.Services;
+using QuotaTray.Services;
 
-namespace OpenUsage.Windows.Views;
+namespace QuotaTray.Views;
 
 /// <summary>
 /// The Mac meter: a full-width capsule track with a leading capsule fill in the severity color, and a

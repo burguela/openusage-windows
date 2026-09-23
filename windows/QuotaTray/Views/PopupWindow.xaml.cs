@@ -6,10 +6,10 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using OpenUsage.Windows.Engine;
-using OpenUsage.Windows.Services;
+using QuotaTray.Engine;
+using QuotaTray.Services;
 
-namespace OpenUsage.Windows.Views;
+namespace QuotaTray.Views;
 
 /// <summary>What the popup asks its owner (the tray controller) to do.</summary>
 public interface IPopupActions
@@ -243,7 +243,7 @@ public partial class PopupWindow : Window
     }
 
     /// <summary>
-    /// The pinned footer: "OpenUsage x.y.z" over the next-update countdown (click it to refresh now),
+    /// The pinned footer: "Quota Tray x.y.z" over the next-update countdown (click it to refresh now),
     /// and on the dashboard the Options menu capsule.
     /// </summary>
     private UIElement BuildFooter(Theme theme)
@@ -253,7 +253,7 @@ public partial class PopupWindow : Window
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
         var identity = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-        var version = _dashboard?.AppVersion is { Length: > 0 } value ? $"OpenUsage {value}" : "OpenUsage";
+        var version = _dashboard?.AppVersion is { Length: > 0 } value ? $"Quota Tray {value}" : "Quota Tray";
         identity.Children.Add(Text(version, theme.TextSecondary, 11));
         _footerStatus = Text("", theme.TextSecondary, 11);
         _footerStatus.Cursor = Cursors.Hand;
@@ -280,7 +280,7 @@ public partial class PopupWindow : Window
                 new("Settings", () => ShowScreen(settings: true)),
                 new("Open Log Folder", _actions.OpenLogFolder),
                 MenuItemSpec.Separator,
-                new("Quit OpenUsage", _actions.Quit),
+                new("Quit Quota Tray", _actions.Quit),
             }), new Thickness(14, 0, 12, 0));
             Grid.SetColumn(options, 1);
             grid.Children.Add(options);

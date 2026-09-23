@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Media;
 
-namespace OpenUsage.Windows.Services;
+namespace QuotaTray.Services;
 
 /// <summary>
 /// Provider marks (the same vector artwork the Mac app draws), generated into

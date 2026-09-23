@@ -1,20 +1,21 @@
-# OpenUsage for Windows (unofficial fork)
+# Quota Tray
 
-> **This is an unofficial, community fork of [OpenUsage](https://github.com/robinebers/openusage).**
-> It adds a Windows tray app on top of the original project. It is not the official OpenUsage, and it is
-> not affiliated with, reviewed by, or endorsed by Robin Ebers or the OpenUsage maintainers. For the
-> official macOS app, go to [robinebers/openusage](https://github.com/robinebers/openusage). Report
-> problems with the Windows app [here](https://github.com/burguela/openusage-windows/issues), not upstream.
+Track your AI coding subscriptions from the Windows notification area.
 
-OpenUsage shows how much of your AI coding plans you've used: session and weekly limits, credits, and
-spend, all in one panel. The original project is a native macOS menu-bar app. This fork makes the same
-engine run on Windows 10 and 11 and adds a notification-area (tray) app that looks and works like the Mac
-popover.
+> **Quota Tray is an unofficial, community fork of [OpenUsage](https://github.com/robinebers/openusage).**
+> It brings the original macOS app to Windows. It is not the official OpenUsage, and it is not affiliated
+> with, reviewed by, or endorsed by Robin Ebers or the OpenUsage maintainers. For the official macOS app,
+> go to [robinebers/openusage](https://github.com/robinebers/openusage). Report problems with Quota Tray
+> [here](https://github.com/burguela/openusage-windows/issues), not upstream.
+
+Quota Tray shows how much of your AI coding plans you've used: session and weekly limits, credits, and
+spend, all in one panel. It runs OpenUsage's engine on Windows 10 and 11 and draws it in a tray app that
+looks and works like the OpenUsage Mac popover.
 
 <p align="center">
-  <img src="docs/screenshots/windows-dashboard-light.png" alt="OpenUsage on Windows, light mode: Total Spend ring and Claude, Codex, and Cursor usage cards" width="300">
+  <img src="docs/screenshots/windows-dashboard-light.png" alt="Quota Tray in light mode: Total Spend ring and Claude, Codex, and Cursor usage cards" width="300">
   &nbsp;&nbsp;
-  <img src="docs/screenshots/windows-dashboard-dark.png" alt="OpenUsage on Windows, dark mode" width="300">
+  <img src="docs/screenshots/windows-dashboard-dark.png" alt="Quota Tray in dark mode" width="300">
 </p>
 
 ## Credits
@@ -22,43 +23,44 @@ popover.
 OpenUsage was created by **[Robin Ebers](https://github.com/robinebers)** and is developed by the
 [OpenUsage contributors](https://github.com/robinebers/openusage/graphs/contributors). Almost everything
 in this repository is their work: the provider integrations, the usage engine, spend pricing, the CLI, the
-macOS app, the design, and the documentation. This fork only adds the Windows port described below.
+macOS app, the design, and the documentation. Quota Tray only adds the Windows port described below.
 
 - **Original repository:** [github.com/robinebers/openusage](https://github.com/robinebers/openusage)
 - **License:** MIT, © 2026 Robin Ebers. The original [LICENSE](LICENSE) is kept unchanged, and the
   Windows changes are released under the same license.
 - **Name and logo:** "OpenUsage" and its logo are trademarks of Robin Ebers
-  ([trademark policy](TRADEMARK.md)). They are used here only to identify the project this fork is based
-  on. This fork is not an official OpenUsage release.
+  ([trademark policy](TRADEMARK.md)). As that policy asks of forks, the Windows app has its own name and
+  icon; "OpenUsage" appears here only to credit the project it's based on. The app's Settings also credit
+  OpenUsage and link to the original repository.
 - **Windows port:** maintained by [João Luiz (@burguela)](https://github.com/burguela).
 
 If you like the app, please star and support the [original project](https://github.com/robinebers/openusage).
 
 ## What this fork adds
 
-- **A Windows tray app** (`OpenUsage.exe`, .NET 8 WPF) with the Mac popover's layout and colors in light
+- **Quota Tray, a Windows tray app** (`QuotaTray.exe`, .NET 8 WPF) with the Mac popover's layout and colors in light
   and dark mode: the Total Spend ring, a card per provider, meters with pace ticks, On Demand rows, Settings,
   and a tray icon with mini meters.
 - **The shared engine on Windows.** The Swift providers, pricing, and caching now build for Windows
-  (`openusage-cli.exe`). Credential paths map to `%USERPROFILE%`, `%APPDATA%`, and `%LOCALAPPDATA%`, the
+  (shipped as `quotatray-engine.exe`). Credential paths map to `%USERPROFILE%`, `%APPDATA%`, and `%LOCALAPPDATA%`, the
   Keychain maps to Windows Credential Manager, and Claude Desktop tokens are decrypted with DPAPI.
 - **Desktop commands** in the CLI that print the whole dashboard as JSON for the tray app
   ([CLI docs](docs/cli.md#desktop-commands)).
 - **A Windows CI workflow** that builds, smoke-tests, and packages the app, renders screenshots, and runs
   the tests on Linux.
 
-The macOS app in this repository is the upstream app with no intended changes. Mac users should install the
-official build from [robinebers/openusage](https://github.com/robinebers/openusage).
+The macOS app in this repository is the upstream OpenUsage app with no intended changes. Mac users should
+install the official build from [robinebers/openusage](https://github.com/robinebers/openusage).
 
 ## Install on Windows
 
-There are no signed releases of the Windows app yet.
+There are no signed releases of Quota Tray yet.
 
 1. Open the latest successful run of the **Windows** workflow in this repository's
    [Actions tab](https://github.com/burguela/openusage-windows/actions/workflows/windows.yml).
-2. Download the `OpenUsage-windows-x64` artifact and unzip it anywhere, for example
-   `%LOCALAPPDATA%\Programs\OpenUsage`.
-3. Run `OpenUsage.exe`. The icon appears in the notification area (it may start in the `^` overflow).
+2. Download the `QuotaTray-windows-x64` artifact and unzip it anywhere, for example
+   `%LOCALAPPDATA%\Programs\QuotaTray`.
+3. Run `QuotaTray.exe`. The icon appears in the notification area (it may start in the `^` overflow).
 
 The build isn't code-signed, so Windows SmartScreen may warn the first time; choose **More info → Run
 anyway**. Requires Windows 10 or 11 (x64). See [docs/windows.md](docs/windows.md) for how to use it, where
@@ -87,7 +89,7 @@ OpenUsage's separate anonymous summaries and public pricing downloads are docume
 
 ## Documentation
 
-- [Windows](docs/windows.md): the tray app, credential and file locations, what's Mac-only, how it's built.
+- [Windows](docs/windows.md): Quota Tray, credential and file locations, what's Mac-only, how it's built.
 - Behavior docs from the original project live in [docs/](docs/README.md): the [dashboard](docs/dashboard.md),
   [menu bar pins](docs/menu-bar.md), [settings](docs/settings.md), [refresh & caching](docs/refreshing.md),
   the [CLI](docs/cli.md), the [local HTTP API](docs/local-http-api.md), the [proxy](docs/proxy.md), and one
@@ -101,13 +103,13 @@ OpenUsage's separate anonymous summaries and public pricing downloads are docume
 
 ```powershell
 swift build -c release --product openusage-cli -Xcc -D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH -Xcxx -D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH
-dotnet publish windows/OpenUsage.Windows/OpenUsage.Windows.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o dist/OpenUsage
-windows/scripts/package.ps1 -BuildDir .build/release -OutDir dist/OpenUsage
+dotnet publish windows/QuotaTray/QuotaTray.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o dist/QuotaTray
+windows/scripts/package.ps1 -BuildDir .build/release -OutDir dist/QuotaTray
 ```
 
 [docs/windows.md](docs/windows.md#how-its-built) explains each step.
 
-**macOS** (unchanged from upstream):
+**macOS** (the upstream OpenUsage app, unchanged):
 
 ```sh
 swift build            # debug build
@@ -146,7 +148,7 @@ only so upstream merges stay clean.
 
 ## Contributing and security
 
-- **Windows app:** open an issue or pull request in
+- **Quota Tray:** open an issue or pull request in
   [this repository](https://github.com/burguela/openusage-windows/issues).
 - **Anything that also affects the Mac app** (providers, pricing, the engine): consider reporting it to the
   [original project](https://github.com/robinebers/openusage), following its
@@ -157,5 +159,5 @@ only so upstream merges stay clean.
 
 ## License
 
-[MIT](LICENSE), © 2026 Robin Ebers. The Windows port is released under the same license. The OpenUsage
+[MIT](LICENSE), © 2026 Robin Ebers. Quota Tray is released under the same license. The OpenUsage
 name and logo are covered by the original project's [trademark policy](TRADEMARK.md).

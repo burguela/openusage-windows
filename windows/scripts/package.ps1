@@ -1,5 +1,5 @@
-# Assembles the Windows app folder next to the published OpenUsage.exe:
-#   openusage-cli.exe              the shared Swift engine (also usable as a CLI)
+# Assembles the Windows app folder next to the published QuotaTray.exe:
+#   quotatray-engine.exe           the shared Swift engine (openusage-cli.exe, renamed; also a CLI)
 #   OpenUsage_OpenUsage.resources  the engine's bundled resources (pricing, provider icons)
 #   *.dll                          the Swift runtime and the MSVC runtime it links against
 #   sqlite3.exe                    used by the Cursor and OpenCode providers to read local databases
@@ -10,7 +10,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
-Copy-Item (Join-Path $BuildDir 'openusage-cli.exe') $OutDir
+Copy-Item (Join-Path $BuildDir 'openusage-cli.exe') (Join-Path $OutDir 'quotatray-engine.exe')
 Copy-Item -Recurse -Force (Join-Path $BuildDir 'OpenUsage_OpenUsage.resources') $OutDir
 
 # Swift runtime: every DLL in the toolchain's runtime folder (the one holding swiftCore.dll).
@@ -33,6 +33,6 @@ if (-not $sqlite) { throw 'sqlite3.exe not found after installing sqlite' }
 Copy-Item $sqlite.FullName $OutDir
 
 # The engine must run from the packaged folder alone.
-$check = & (Join-Path $OutDir 'openusage-cli.exe') dashboard --cached | ConvertFrom-Json
+$check = & (Join-Path $OutDir 'quotatray-engine.exe') dashboard --cached | ConvertFrom-Json
 if ($check.schema -ne 'openusage.desktop.v1') { throw 'packaged engine failed its smoke test' }
 Get-ChildItem $OutDir | Format-Table Name, Length

@@ -1,7 +1,8 @@
 name: Windows
 
-# Builds OpenUsage for Windows: the shared Swift engine (`openusage-cli.exe`) plus the WPF
-# notification-area app (`OpenUsage.exe`), packaged into one zip artifact. See docs/windows.md.
+# Builds Quota Tray, this fork's Windows app: the shared Swift engine (`openusage-cli.exe`, shipped as
+# `quotatray-engine.exe`) plus the WPF notification-area app (`QuotaTray.exe`), packaged into one zip
+# artifact. See docs/windows.md.
 on:
   push:
   pull_request:
@@ -20,6 +21,8 @@ jobs:
   windows:
     name: Build Windows App
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,34 +51,49 @@ jobs:
 
       - name: Publish tray app
         run: >
-          dotnet publish windows/OpenUsage.Windows/OpenUsage.Windows.csproj
+          dotnet publish windows/QuotaTray/QuotaTray.csproj
           -c Release -r win-x64 --self-contained true
           -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
           -p:EnableCompressionInSingleFile=true
-          -o dist/OpenUsage
+          -o dist/QuotaTray
 
       - name: Render panel screenshots
         shell: pwsh
         run: |
-          $p = Start-Process dist/OpenUsage/OpenUsage.exe -Wait -PassThru -ArgumentList @(
-            '--render-preview', 'windows/OpenUsage.Windows/Preview/sample-dashboard.json', 'dist/screenshots')
+          $p = Start-Process dist/QuotaTray/QuotaTray.exe -Wait -PassThru -ArgumentList @(
+            '--render-preview', 'windows/QuotaTray/Preview/sample-dashboard.json', 'dist/screenshots')
           if ($p.ExitCode -ne 0) { throw "preview render failed ($($p.ExitCode))" }
           Get-ChildItem dist/screenshots | Format-Table Name, Length
 
       - uses: actions/upload-artifact@v4
         with:
-          name: OpenUsage-windows-screenshots
+          name: QuotaTray-windows-screenshots
           path: dist/screenshots
           if-no-files-found: error
 
+      - name: Publish screenshots to a review branch (temporary)
+        if: github.event_name == 'push'
+        shell: pwsh
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          $dir = Join-Path $env:RUNNER_TEMP shots
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          Copy-Item dist/screenshots/*.png $dir
+          Set-Location $dir
+          git init -q -b screenshots
+          git -c user.name=ci -c user.email=ci@localhost add .
+          git -c user.name=ci -c user.email=ci@localhost commit -q -m "Panel screenshots for ${{ github.sha }}"
+          git push -q "https://x-access-token:$env:TOKEN@github.com/${{ github.repository }}" "screenshots:refs/heads/review/quotatray-screenshots-${{ github.run_id }}"
+
       - name: Package
         shell: pwsh
-        run: windows/scripts/package.ps1 -BuildDir .build/release -OutDir dist/OpenUsage
+        run: windows/scripts/package.ps1 -BuildDir .build/release -OutDir dist/QuotaTray
 
       - uses: actions/upload-artifact@v4
         with:
-          name: OpenUsage-windows-x64
-          path: dist/OpenUsage
+          name: QuotaTray-windows-x64
+          path: dist/QuotaTray
           if-no-files-found: error
 
   engine-tests-windows:

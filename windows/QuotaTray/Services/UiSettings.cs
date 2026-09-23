@@ -1,15 +1,15 @@
 using System;
 using Microsoft.Win32;
 
-namespace OpenUsage.Windows.Services;
+namespace QuotaTray.Services;
 
 /// <summary>
 /// The tray app's own display preferences (the Mac app keeps these in its UI layer too), stored under
-/// <c>HKCU\Software\OpenUsage</c>. Provider on/off and the Used/Left meter style live in the engine.
+/// <c>HKCU\Software\QuotaTray</c>. Provider on/off and the Used/Left meter style live in the engine.
 /// </summary>
 public static class UiSettings
 {
-    private const string KeyPath = @"Software\OpenUsage";
+    private const string KeyPath = @"Software\QuotaTray";
 
     /// <summary>Settings, General, Show Total Spend. On by default, like the Mac app.</summary>
     public static bool ShowTotalSpend

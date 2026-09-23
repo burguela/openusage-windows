@@ -83,6 +83,16 @@ enum Platform {
             ?? FileManager.default.temporaryDirectory
     }
 
+    /// This app's own folder under `appDataDirectory`. The Windows build ships as Quota Tray, an unofficial
+    /// fork of OpenUsage, so its caches and logs live under that name there.
+    static var appFolderName: String {
+        #if os(Windows)
+        "QuotaTray"
+        #else
+        "OpenUsage"
+        #endif
+    }
+
     /// Where a desktop app (Electron or VS Code based: Claude, Cursor, Devin) keeps its per-user data,
     /// relative to the home directory: `Library/Application Support/<App>` on macOS and
     /// `AppData/Roaming/<App>` (`%APPDATA%`) on Windows.

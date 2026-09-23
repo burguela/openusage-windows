@@ -11,8 +11,8 @@ the level to Debug surfaces the extra detail in both places (see [Debugging](deb
 ~/Library/Logs/OpenUsage/OpenUsage.log
 ```
 
-On Windows it's `%LOCALAPPDATA%\OpenUsage\Logs\OpenUsage.log`, next to the tray app's own
-`OpenUsage.Windows.log` (right-click the tray icon → **Open Log Folder**).
+On Windows (Quota Tray) it's `%LOCALAPPDATA%\QuotaTray\Logs\Engine.log`, next to the tray app's own
+`QuotaTray.log` (right-click the tray icon → **Open Log Folder**).
 
 The easiest way to grab it: open Settings -> Advanced and use **Copy Log Path** (puts the path on the
 clipboard) or **Reveal in Finder** (selects the file in a Finder window). No Terminal needed.

@@ -1,7 +1,7 @@
 using System.Windows.Media;
 using Microsoft.Win32;
 
-namespace OpenUsage.Windows.Services;
+namespace QuotaTray.Services;
 
 /// <summary>
 /// The panel's palette: the macOS system colors the Mac app uses (text background, grouped-card

@@ -31,7 +31,7 @@ points to the signed helper inside OpenUsage, so in-place app updates also updat
 
 ## Desktop commands
 
-The [Windows app](windows.md) drives the same binary (`openusage-cli.exe` there) with a few extra
+The [Windows app](windows.md) (Quota Tray) drives the same binary (shipped as `quotatray-engine.exe`) with a few extra
 commands. Each prints the display-ready `openusage.desktop.v1` dashboard: every provider with its
 on/off state, plan, notice, links, and rows whose text is already formatted (headlines, reset
 countdowns, pace notes), so a front end only lays it out.

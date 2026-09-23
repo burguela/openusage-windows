@@ -6,9 +6,9 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
-using OpenUsage.Windows.Engine;
+using QuotaTray.Engine;
 
-namespace OpenUsage.Windows.Tray;
+namespace QuotaTray.Tray;
 
 /// <summary>
 /// Draws the notification-area icon. With data it shows up to two mini meters for the pinned
@@ -21,7 +21,7 @@ public sealed class TrayIconRenderer : IDisposable
 
     public TrayIconRenderer()
     {
-        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("OpenUsage.ico")
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("QuotaTray.ico")
             ?? throw new InvalidOperationException("The embedded app icon is missing.");
         _appIcon = new Icon(stream, System.Windows.Forms.SystemInformation.SmallIconSize);
     }
