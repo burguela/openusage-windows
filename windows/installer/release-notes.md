@@ -1,5 +1,7 @@
 Quota Tray {VERSION} for Windows 10 and 11 (x64): your AI usage limits in the taskbar, with the Mac app's strip of provider marks and numbers, and the same panel.
 
+{CHANGES}
+
 Quota Tray is an unofficial fork of [OpenUsage](https://github.com/robinebers/openusage) by Robin Ebers and contributors (MIT). It is not an official OpenUsage release; report problems in this repository's issues.
 
 ## Install

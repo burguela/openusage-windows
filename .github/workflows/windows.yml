@@ -171,7 +171,18 @@ jobs:
             exit 1
           fi
           (cd dist && zip -qr QuotaTray-windows-x64.zip QuotaTray)
-          sed "s/{VERSION}/$VERSION/g" windows/installer/release-notes.md > dist/notes.md
+          # What changed since the previous Quota Tray release: GitHub's generated list of merged PRs plus
+          # a compare link, dropped into the notes template at {CHANGES}.
+          prev=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName \
+            --jq '[.[].tagName | select(startswith("quotatray-v"))][0] // empty')
+          args=(-f tag_name="$tag" -f target_commitish="$GITHUB_SHA")
+          if [ -n "$prev" ]; then args+=(-f previous_tag_name="$prev"); fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" "${args[@]}" --jq .body > dist/changes.md
+          awk -v version="$VERSION" '
+            FNR == NR { changes = changes $0 "\n"; next }
+            $0 == "{CHANGES}" { printf "%s", changes; next }
+            { gsub(/[{]VERSION[}]/, version); print }
+          ' dist/changes.md windows/installer/release-notes.md > dist/notes.md
           gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
             --title "Quota Tray $VERSION" --notes-file dist/notes.md --latest \
             dist/installer/QuotaTray-Setup-x64.exe dist/QuotaTray-windows-x64.zip \

@@ -176,7 +176,9 @@ installer show it. Only the owner picks a new number. To publish it, run the **W
 on `main` (Actions → Windows → Run workflow) with **Publish release** checked. After the app, the
 installer check, and every test job pass, it creates the GitHub release `quotatray-v<version>` as Latest
 with the installer, the portable zip, `install.ps1`, `uninstall.ps1`, and the notes in
-`windows/installer/release-notes.md`. It refuses a version that is already released.
+`windows/installer/release-notes.md`. The notes open with what changed since the previous Quota Tray
+release: the pull requests merged since then, as GitHub lists them, and a link to the full comparison.
+It refuses a version that is already released.
 
 While developing the tray app, set `QUOTATRAY_ENGINE` to a built `openusage-cli.exe` to use an engine
 from another folder. `QuotaTray.exe --render-preview <dashboard.json> <folder>` renders the panel (light and
