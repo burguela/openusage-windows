@@ -64,7 +64,9 @@ enum JSONLStreamingReader {
 
             var offset = chunk.startIndex
             while offset < chunk.endIndex {
-                let newline = chunk[offset..<chunk.endIndex].firstIndex(of: UInt8(ascii: "\n"))
+                let newline = chunk.withUnsafeBytes {
+                    ByteSearch.firstIndex(of: UInt8(ascii: "\n"), in: $0, from: offset - chunk.startIndex)
+                }.map { chunk.startIndex + $0 }
                 let end = newline ?? chunk.endIndex
                 let fragment = chunk[offset..<end]
 
