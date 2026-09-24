@@ -154,6 +154,7 @@ actor IncrementalJSONLScanner<Item: Codable & Sendable> {
                 toParse.append(file)
             }
         }
+        let parseStart = ContinuousClock.now
         let parseResults = await Self.parseFiles(
             toParse,
             maxConcurrentParses: maxConcurrentParses,
@@ -162,8 +163,12 @@ actor IncrementalJSONLScanner<Item: Codable & Sendable> {
             parse: parse
         )
         guard !Task.isCancelled else {
-            keepFinishedFiles(parseResults, identity: cacheIdentity, changedCount: toParse.count)
+            keepFinishedFiles(parseResults, identity: cacheIdentity, changed: toParse)
             return nil
+        }
+        let parseTime = ContinuousClock.now - parseStart
+        if parseTime > .seconds(10) {
+            AppLog.info(logTag, "parsed \(toParse.count) changed local usage logs (\(Self.megabytes(toParse))) in \(parseTime)")
         }
         let oversizedRecordCount = parseResults.reduce(0) { $0 + $1.oversizedRecordCount }
         if oversizedRecordCount > 0 {
@@ -212,7 +217,7 @@ actor IncrementalJSONLScanner<Item: Codable & Sendable> {
     /// files it finished, so the next scan resumes instead of starting over: a history too big to parse
     /// within one refresh fills in over a few. Nothing is removed, because an unfinished pass proves
     /// nothing about the files it didn't reach.
-    private func keepFinishedFiles(_ results: [ParseResult], identity: String, changedCount: Int) {
+    private func keepFinishedFiles(_ results: [ParseResult], identity: String, changed: [JSONLScanning.DiscoveredFile]) {
         var cache = caches[identity] ?? [:]
         var kept: Set<String> = []
         for result in results {
@@ -220,14 +225,21 @@ actor IncrementalJSONLScanner<Item: Codable & Sendable> {
             cache[result.file.path] = CachedFile(size: result.file.size, mtime: result.file.mtime, items: items)
             kept.insert(result.file.path)
         }
-        guard !kept.isEmpty else { return }
-        caches[identity] = cache
-        dirtyUpsertPaths[identity, default: []].formUnion(kept)
-        scheduleWrite(identity: identity)
+        if !kept.isEmpty {
+            caches[identity] = cache
+            dirtyUpsertPaths[identity, default: []].formUnion(kept)
+            scheduleWrite(identity: identity)
+        }
+        guard !changed.isEmpty else { return }
         AppLog.info(
             logTag,
-            "local usage log scan interrupted; kept \(kept.count) of \(changedCount) changed files for the next scan"
+            "local usage log scan interrupted; kept \(kept.count) of \(changed.count) changed files "
+                + "(\(Self.megabytes(changed)) to read) for the next scan"
         )
+    }
+
+    private static func megabytes(_ files: [JSONLScanning.DiscoveredFile]) -> String {
+        "\(files.reduce(0) { $0 + $1.size } / 1_048_576) MB"
     }
 
     /// Wait for the real debounced tasks rather than bypassing them. Tests configure a tiny debounce,

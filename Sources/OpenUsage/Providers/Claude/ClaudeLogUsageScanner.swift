@@ -429,14 +429,22 @@ actor ClaudeLogUsageScanner {
     /// Parse every usage line of one session file. Entries keep their raw timestamps — the date
     /// window is applied at aggregation so a cached parse stays valid as the window slides.
     static func parseFile(_ data: Data) -> [Entry] {
-        let marker = Data(#""usage":{"#.utf8)
         var entries: [Entry] = []
-        for line in data.split(separator: UInt8(ascii: "\n")) {
-            guard line.range(of: marker) != nil else { continue }
-            entries.append(contentsOf: parseEntries(Data(line)))
+        data.withUnsafeBytes { bytes in
+            var start = 0
+            while start < bytes.count {
+                let end = ByteSearch.firstIndex(of: UInt8(ascii: "\n"), in: bytes, from: start) ?? bytes.count
+                let line = UnsafeRawBufferPointer(rebasing: bytes[start..<end])
+                if ByteSearch.contains(usageMarker, in: line) {
+                    entries.append(contentsOf: parseEntries(Data(line)))
+                }
+                start = end + 1
+            }
         }
         return entries
     }
+
+    private static let usageMarker = Array(#""usage":{"#.utf8)
 
     /// Decode one JSONL line into an `Entry`, mirroring what ccusage's serde model accepts: `usage`
     /// with numeric `input_tokens`/`output_tokens` is required, everything else optional, and a
