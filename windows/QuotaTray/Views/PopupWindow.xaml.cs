@@ -1,13 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Microsoft.Win32;
 using QuotaTray.Engine;
 using QuotaTray.Services;
+using QuotaTray.Tray;
 
 namespace QuotaTray.Views;
 
@@ -24,9 +28,9 @@ public interface IPopupActions
 }
 
 /// <summary>
-/// The panel that opens above the tray icon, laid out like the Mac popover: the Total Spend card,
-/// then one grouped card per provider, and a pinned footer with the version, the next-update
-/// countdown, and the Options menu. Settings opens in the same panel. Built in code from the
+/// The panel that opens above the taskbar strip (or the tray icon), laid out like the Mac popover:
+/// the Total Spend card, then one grouped card per provider, and a pinned footer with the version,
+/// the next-update countdown, and the Options menu. Settings opens in the same panel. Built in code from the
 /// engine's display-ready dashboard; it closes when it loses focus.
 /// </summary>
 public partial class PopupWindow : Window
@@ -49,6 +53,9 @@ public partial class PopupWindow : Window
     /// <summary>Preview renders freeze the clock and let the panel grow to its full height.</summary>
     private DateTimeOffset? _previewNow;
 
+    /// <summary>The taskbar strip's screen bounds while it shows; the panel opens right above it.</summary>
+    internal Func<NativeMethods.RECT?>? StripBounds { get; set; }
+
     /// <summary>When the panel last hid itself on focus loss (see <see cref="ShouldIgnoreToggle"/>).</summary>
     public DateTime LastAutoHide { get; private set; } = DateTime.MinValue;
 
@@ -56,7 +63,12 @@ public partial class PopupWindow : Window
     {
         _actions = actions;
         InitializeComponent();
-        Closing += (_, _) => _closing = true;
+        Closing += (_, _) =>
+        {
+            _closing = true;
+            SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+        };
+        SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
         Deactivated += (_, _) =>
         {
             // Closing (on Quit) also deactivates; hiding a closing window throws.
@@ -166,20 +178,26 @@ public partial class PopupWindow : Window
         {
             return;
         }
-        // Anchor to the work-area corner next to the taskbar's notification area. The work area
-        // excludes the taskbar, so the edge it was trimmed from says where the taskbar sits.
-        var area = SystemParameters.WorkArea;
-        var screenWidth = SystemParameters.PrimaryScreenWidth;
-        var screenHeight = SystemParameters.PrimaryScreenHeight;
-        var taskbarOnTop = area.Top > 0;
-        var taskbarOnLeft = area.Left > 0 && area.Width < screenWidth;
-        Left = taskbarOnLeft ? area.Left : area.Right - ActualWidth;
-        Top = taskbarOnTop || area.Height >= screenHeight ? area.Top : area.Bottom - ActualHeight;
-        if (Top < area.Top)
+        try
         {
-            Top = area.Top;
+            PanelPlacement.Place(new WindowInteropHelper(this).Handle, StripBounds?.Invoke(), Frame.Margin.Right);
+        }
+        catch (ExternalException error)
+        {
+            AppLog.Error($"panel placement failed: {error}");
         }
     }
+
+    /// <summary>A resolution or scale change while the panel is open: fit and place it again.</summary>
+    private void OnDisplaySettingsChanged(object? sender, EventArgs e) =>
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (IsVisible && !_closing)
+            {
+                Render();
+                PositionNearTray();
+            }
+        });
 
     // MARK: - Rendering
 
@@ -223,9 +241,23 @@ public partial class PopupWindow : Window
             // Grow with the content up to the screen, like the Mac panel.
             MaxHeight = _previewNow != null
                 ? double.PositiveInfinity
-                : Math.Max(240, SystemParameters.WorkArea.Height - 24 - 16 - 64 - (_showingSettings ? 44 : 0)),
+                : Math.Max(240, WorkAreaHeight() - 24 - 16 - 64 - (_showingSettings ? 44 : 0)),
             Focusable = false,
         });
+    }
+
+    /// <summary>The taskbar monitor's current work-area height, read live so a resolution change counts.</summary>
+    private static double WorkAreaHeight()
+    {
+        try
+        {
+            return PanelPlacement.WorkAreaHeightDip();
+        }
+        catch (ExternalException error)
+        {
+            AppLog.Error($"work area read failed, using the startup value: {error}");
+            return SystemParameters.WorkArea.Height;
+        }
     }
 
     /// <summary>Settings' navigation bar: a Back capsule and the centered screen title.</summary>

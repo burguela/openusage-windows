@@ -13,8 +13,9 @@ the OpenUsage Mac app.
 
 The panel follows the Mac popover's layout and colors, in Windows' light or dark app mode.
 
-- **Click the tray icon** to open the panel above the taskbar. Click anywhere else, or press Esc, to
-  close it.
+- **Click the taskbar strip or the tray icon** to open the panel. It always opens in the same spot, right
+  above the strip (above the notification area when the strip is off), even after you change the screen
+  resolution or scale. Click anywhere else, or press Esc, to close it.
 - **Cost** at the top is the Total Spend ring: what Claude, Codex, Cursor, and other spend-tracking
   providers cost Today, Yesterday, or over the last 30 days. Turn it off in Settings.
 - Each provider has its own card with its meters, the plan, and a warning triangle when the last refresh
@@ -33,8 +34,9 @@ The panel follows the Mac popover's layout and colors, in Windows' light or dark
 
 Like the OpenUsage Mac app's menu-bar strip, Quota Tray shows your pinned readings right in the
 taskbar, just left of the notification area: each provider's mark followed by its values, with one value
-as a single bold number and two stacked on two lines (for example Claude's Session and Weekly). Click the
-strip to open the panel and right-click it for the menu. It follows Show Usage As (Left or Used), and a
+as a single bold number and two stacked on two lines (for example Claude's Session and Weekly). Click
+anywhere on the strip, including the gaps between readings, to open the panel, and right-click it for the
+menu. It follows Show Usage As (Left or Used), and a
 provider only appears once one of its pinned readings has data; until anything does, the strip shows
 the Quota Tray icon.
 

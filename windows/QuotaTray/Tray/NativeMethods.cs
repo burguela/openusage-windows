@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace QuotaTray.Tray;
 
-/// <summary>The Win32 calls the taskbar strip needs.</summary>
+/// <summary>The Win32 calls the taskbar strip and the panel placement need.</summary>
 internal static class NativeMethods
 {
     public const int WS_CHILD = 0x40000000;
@@ -23,10 +23,12 @@ internal static class NativeMethods
     public const uint TME_LEAVE = 0x00000002;
 
     public const uint SWP_NOSIZE = 0x0001;
+    public const uint SWP_NOZORDER = 0x0004;
     public const uint SWP_NOACTIVATE = 0x0010;
     public const uint SWP_SHOWWINDOW = 0x0040;
     public const uint SWP_HIDEWINDOW = 0x0080;
     public static readonly IntPtr HWND_TOP = IntPtr.Zero;
+    public const uint MONITOR_DEFAULTTOPRIMARY = 0x00000001;
 
     public const byte AC_SRC_OVER = 0x00;
     public const byte AC_SRC_ALPHA = 0x01;
@@ -50,6 +52,14 @@ internal static class NativeMethods
     public struct SIZE
     {
         public int Width, Height;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MONITORINFO
+    {
+        public uint cbSize;
+        public RECT rcMonitor, rcWork;
+        public uint dwFlags;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -103,6 +113,13 @@ internal static class NativeMethods
 
     [DllImport("user32.dll")]
     public static extern uint GetDpiForWindow(IntPtr hwnd);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint flags);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetMonitorInfo(IntPtr monitor, ref MONITORINFO info);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
