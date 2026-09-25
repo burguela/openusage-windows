@@ -65,6 +65,7 @@ public sealed class TrayController : IPopupActions, IDisposable
         _strip = new TaskbarStrip(TogglePopup, ShowMenuAtCursor);
         // When the strip can't show (a vertical taskbar, say), the tray icon draws the meters instead.
         _strip.ShowingChanged += UpdateIcon;
+        _popup.StripBounds = () => _strip.ScreenBounds;
 
         _timer = new DispatcherTimer { Interval = TickInterval };
         _timer.Tick += (_, _) => OnTick();

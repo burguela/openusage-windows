@@ -23,6 +23,9 @@ public sealed class TaskbarStrip : Forms.NativeWindow, IDisposable
 {
     private const double HorizontalPadding = 8;
     private const double HoverInset = 4;
+    // A layered window only takes clicks on pixels that aren't fully transparent, so the whole strip
+    // gets this invisible fill; otherwise only the numbers and marks themselves would be clickable.
+    private static readonly Color HitTestFill = Color.FromArgb(0x01, 0x00, 0x00, 0x00);
 
     private readonly Action _onClick;
     private readonly Action _onRightClick;
@@ -51,6 +54,10 @@ public sealed class TaskbarStrip : Forms.NativeWindow, IDisposable
     public bool IsShowing { get; private set; }
 
     public event Action? ShowingChanged;
+
+    /// <summary>Where the strip sits on screen, in physical pixels, while it shows; the panel opens above it.</summary>
+    internal RECT? ScreenBounds =>
+        IsShowing && Handle != IntPtr.Zero && GetWindowRect(Handle, out var bounds) ? bounds : null;
 
     public void Show(IReadOnlyList<StripGroup> groups)
     {
@@ -164,11 +171,12 @@ public sealed class TaskbarStrip : Forms.NativeWindow, IDisposable
         var root = new Border
         {
             Height = heightDip,
+            Background = new SolidColorBrush(HitTestFill),
             Padding = new Thickness(0, HoverInset, 0, HoverInset),
             Child = new Border
             {
                 CornerRadius = new CornerRadius(4),
-                Background = _hover ? new SolidColorBrush(hoverFill) : Brushes.Transparent,
+                Background = new SolidColorBrush(_hover ? hoverFill : HitTestFill),
                 Padding = new Thickness(HorizontalPadding, 0, HorizontalPadding, 0),
                 Child = TaskbarStripView.Build(_groups, TaskbarStripView.Foreground(TrayIconRenderer.TaskbarUsesLightTheme())),
             },
