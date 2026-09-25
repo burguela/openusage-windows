@@ -1,6 +1,6 @@
 # OpenUsage Documentation
 
-> This is the documentation of [openusage-windows](https://github.com/burguela/openusage-windows), an
+> This is the documentation of [quota-tray](https://github.com/burguela/quota-tray), an
 > unofficial fork of [OpenUsage](https://github.com/robinebers/openusage) by Robin Ebers that adds
 > Quota Tray, a Windows app. Everything except the [Windows](windows.md) page comes from the original project and
 > describes the macOS app, unless a page says otherwise.
