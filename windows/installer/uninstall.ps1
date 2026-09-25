@@ -1,6 +1,6 @@
 # Removes Quota Tray for the current user. Paste into PowerShell:
 #
-#   irm https://github.com/burguela/openusage-windows/releases/latest/download/uninstall.ps1 | iex
+#   irm https://github.com/burguela/quota-tray/releases/latest/download/uninstall.ps1 | iex
 #
 # Same as Settings > Apps > Quota Tray > Uninstall: it quits the app, removes it and its Start menu and
 # sign-in entries, and keeps settings and logs in %LOCALAPPDATA%\QuotaTray unless QUOTATRAY_PURGE is set.

@@ -6,7 +6,7 @@ Track your AI coding subscriptions from the Windows notification area.
 > It brings the original macOS app to Windows. It is not the official OpenUsage, and it is not affiliated
 > with, reviewed by, or endorsed by Robin Ebers or the OpenUsage maintainers. For the official macOS app,
 > go to [robinebers/openusage](https://github.com/robinebers/openusage). Report problems with Quota Tray
-> [here](https://github.com/burguela/openusage-windows/issues), not upstream.
+> [here](https://github.com/burguela/quota-tray/issues), not upstream.
 
 Quota Tray shows how much of your AI coding plans you've used: session and weekly limits, credits, and
 spend, all in one panel. It runs OpenUsage's engine on Windows 10 and 11 and draws it in a tray app that
@@ -57,17 +57,17 @@ install the official build from [robinebers/openusage](https://github.com/robine
 Paste into PowerShell:
 
 ```powershell
-irm https://github.com/burguela/openusage-windows/releases/latest/download/install.ps1 | iex
+irm https://github.com/burguela/quota-tray/releases/latest/download/install.ps1 | iex
 ```
 
-It installs the latest [release](https://github.com/burguela/openusage-windows/releases/latest) for your
+It installs the latest [release](https://github.com/burguela/quota-tray/releases/latest) for your
 account only (no administrator rights), adds a Start menu entry, and starts Quota Tray when you sign in.
 You can also download `QuotaTray-Setup-x64.exe` from the release, or the portable
 `QuotaTray-windows-x64.zip`. Run the command or the installer again to update. Your pinned readings
 appear in the taskbar next to the clock, provider icon and numbers, like the Mac app's menu-bar strip.
 
 Uninstall from **Settings → Apps**, or with
-`irm https://github.com/burguela/openusage-windows/releases/latest/download/uninstall.ps1 | iex`.
+`irm https://github.com/burguela/quota-tray/releases/latest/download/uninstall.ps1 | iex`.
 
 <p align="center">
   <img src="docs/screenshots/windows-tray-dark.png" alt="Quota Tray's readings in the Windows taskbar" width="420">
@@ -161,12 +161,12 @@ project's signing secrets; it is kept only so upstream merges stay clean.
 ## Contributing and security
 
 - **Quota Tray:** open an issue or pull request in
-  [this repository](https://github.com/burguela/openusage-windows/issues).
+  [this repository](https://github.com/burguela/quota-tray/issues).
 - **Anything that also affects the Mac app** (providers, pricing, the engine): consider reporting it to the
   [original project](https://github.com/robinebers/openusage), following its
   [contributing rules](CONTRIBUTING.md), so everyone benefits.
 - **Security:** report Windows-specific issues privately through this repository's
-  [security advisories](https://github.com/burguela/openusage-windows/security/advisories/new); report
+  [security advisories](https://github.com/burguela/quota-tray/security/advisories/new); report
   anything in the shared code to the original project per [SECURITY.md](SECURITY.md).
 
 ## License

@@ -1,9 +1,9 @@
 # Windows (Quota Tray)
 
-> **Quota Tray** is the Windows app of [openusage-windows](https://github.com/burguela/openusage-windows),
+> **Quota Tray** is the Windows app of [quota-tray](https://github.com/burguela/quota-tray),
 > an unofficial fork of [OpenUsage](https://github.com/robinebers/openusage) by Robin Ebers and
 > contributors. It is not an official OpenUsage release, and the original maintainers don't support it;
-> report Windows problems in the fork's [issues](https://github.com/burguela/openusage-windows/issues).
+> report Windows problems in the fork's [issues](https://github.com/burguela/quota-tray/issues).
 
 Quota Tray runs on Windows 10 and 11 as a notification-area (tray) app. It is built on OpenUsage's
 engine, so it tracks the same providers, reads the same local credentials, and shows the same numbers as
@@ -62,10 +62,10 @@ side has no room for the strip, so there the tray icon shows the meters.
 ## Installing
 
 Paste into PowerShell to install or update the latest
-[release](https://github.com/burguela/openusage-windows/releases/latest):
+[release](https://github.com/burguela/quota-tray/releases/latest):
 
 ```powershell
-irm https://github.com/burguela/openusage-windows/releases/latest/download/install.ps1 | iex
+irm https://github.com/burguela/quota-tray/releases/latest/download/install.ps1 | iex
 ```
 
 It downloads the installer and runs it silently. Each release also has the files themselves:
@@ -82,13 +82,13 @@ To uninstall, use **Settings → Apps**, or paste:
 
 ```powershell
 # Settings and logs stay; set $env:QUOTATRAY_PURGE = 1 first to remove them too.
-irm https://github.com/burguela/openusage-windows/releases/latest/download/uninstall.ps1 | iex
+irm https://github.com/burguela/quota-tray/releases/latest/download/uninstall.ps1 | iex
 ```
 
 A reinstall picks up your settings and caches where you left off. With a downloaded installer,
 `$env:QUOTATRAY_SETUP = 'C:\path\QuotaTray-Setup-x64.exe'` makes `install.ps1` use it instead of
 downloading. Every successful run of the
-[Windows workflow](https://github.com/burguela/openusage-windows/actions/workflows/windows.yml) also offers
+[Windows workflow](https://github.com/burguela/quota-tray/actions/workflows/windows.yml) also offers
 the same builds as the `QuotaTray-windows-setup` and `QuotaTray-windows-x64` artifacts.
 
 Quota Tray isn't code-signed yet, so SmartScreen may warn the first time; choose **More info → Run
@@ -176,7 +176,9 @@ installer show it. Only the owner picks a new number. To publish it, run the **W
 on `main` (Actions → Windows → Run workflow) with **Publish release** checked. After the app, the
 installer check, and every test job pass, it creates the GitHub release `quotatray-v<version>` as Latest
 with the installer, the portable zip, `install.ps1`, `uninstall.ps1`, and the notes in
-`windows/installer/release-notes.md`. It refuses a version that is already released.
+`windows/installer/release-notes.md`. The notes open with what changed since the previous Quota Tray
+release: the pull requests merged since then, as GitHub lists them, and a link to the full comparison.
+It refuses a version that is already released.
 
 While developing the tray app, set `QUOTATRAY_ENGINE` to a built `openusage-cli.exe` to use an engine
 from another folder. `QuotaTray.exe --render-preview <dashboard.json> <folder>` renders the panel (light and
